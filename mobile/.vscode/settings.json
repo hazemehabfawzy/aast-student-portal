@@ -1,0 +1,9 @@
+{
+  "dart.flutterSdkPath": "D:\\Projects\\Tools\\flutter",
+  "dart.sdkPath": "D:\\Projects\\Tools\\flutter\\bin\\cache\\dart-sdk",
+  "dart.env": {
+    "GRADLE_USER_HOME": "D:\\Projects\\Tools\\gradle-home",
+    "ANDROID_HOME": "D:\\Projects\\Tools\\AndroidSdk",
+    "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.18.8-hotspot"
+  }
+}

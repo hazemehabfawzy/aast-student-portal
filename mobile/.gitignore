@@ -1,0 +1,19 @@
+# Flutter
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
+# Android
+android/.gradle/
+android/app/build/
+android/local.properties
+android/key.properties
+
+# Firebase (sensitive)
+android/app/google-services.json
+
+# iOS
+ios/Pods/
+ios/.symlinks/
