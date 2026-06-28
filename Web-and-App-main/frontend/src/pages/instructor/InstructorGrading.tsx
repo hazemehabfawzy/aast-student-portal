@@ -3,13 +3,13 @@ import { useLocation } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 
 interface Section {
-  id: number;
+  id: string;
   courseCode: string;
   courseName: string;
 }
 
 interface StudentGrade {
-  enrollmentId: number;
+  enrollmentId: string;
   studentNumber: string;
   studentName: string;
   week7Score?: number;
@@ -23,16 +23,16 @@ interface StudentGrade {
 
 export const InstructorGrading: React.FC = () => {
   const location = useLocation();
-  const state = (location.state as { sectionId?: number; sectionCode?: string; sectionName?: string }) || {};
+  const state = (location.state as { sectionId?: string; sectionCode?: string; sectionName?: string }) || {};
 
   const [sections, setSections] = useState<Section[]>([]);
-  const [selectedSectionId, setSelectedSectionId] = useState<number | ''>(state.sectionId || '');
+  const [selectedSectionId, setSelectedSectionId] = useState<string>(state.sectionId || '');
   const [grades, setGrades] = useState<StudentGrade[]>([]);
   const [loading, setLoading] = useState(false);
-  const [savingId, setSavingId] = useState<number | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   // Editable scores locally
-  const [editScores, setEditScores] = useState<Record<number, {
+  const [editScores, setEditScores] = useState<Record<string, {
     week7Score: string;
     week12Score: string;
     prefinalScore: string;
@@ -40,7 +40,6 @@ export const InstructorGrading: React.FC = () => {
   }>>({});
 
   useEffect(() => {
-    // Retrieve sections for dropdown selection if needed
     apiClient.get<Section[]>('/instructor/sections')
       .then((res) => {
         setSections(res.data);
@@ -58,7 +57,6 @@ export const InstructorGrading: React.FC = () => {
     apiClient.get<StudentGrade[]>(`/sections/${selectedSectionId}/results`)
       .then((res) => {
         setGrades(res.data);
-        // Populate edit state
         const initialEdit: typeof editScores = {};
         res.data.forEach((g) => {
           initialEdit[g.enrollmentId] = {
@@ -74,7 +72,7 @@ export const InstructorGrading: React.FC = () => {
       .finally(() => setLoading(false));
   }, [selectedSectionId]);
 
-  const handleScoreChange = (enrollmentId: number, field: string, value: string) => {
+  const handleScoreChange = (enrollmentId: string, field: string, value: string) => {
     if (value === '') {
       setEditScores(prev => ({
         ...prev,
@@ -108,7 +106,7 @@ export const InstructorGrading: React.FC = () => {
     }));
   };
 
-  const handleSave = (enrollmentId: number) => {
+  const handleSave = (enrollmentId: string) => {
     const scores = editScores[enrollmentId];
     if (!scores) return;
 
@@ -123,7 +121,6 @@ export const InstructorGrading: React.FC = () => {
     apiClient.put(`/results/${enrollmentId}`, payload)
       .then(() => {
         alert('Scores updated successfully and grade recalculated.');
-        // Refresh grades
         if (selectedSectionId) {
           apiClient.get<StudentGrade[]>(`/sections/${selectedSectionId}/results`)
             .then((res) => {
@@ -139,7 +136,7 @@ export const InstructorGrading: React.FC = () => {
       });
   };
 
-  const handlePublish = (enrollmentId: number) => {
+  const handlePublish = (enrollmentId: string) => {
     if (!window.confirm('Are you sure you want to publish this result? The student will be notified.')) return;
 
     apiClient.post(`/results/${enrollmentId}/publish`)
@@ -165,7 +162,7 @@ export const InstructorGrading: React.FC = () => {
             className="form-input"
             style={{ width: '220px', background: 'rgba(15,23,42,0.9)' }}
             value={selectedSectionId}
-            onChange={(e) => setSelectedSectionId(e.target.value === '' ? '' : Number(e.target.value))}
+            onChange={(e) => setSelectedSectionId(e.target.value)}
           >
             <option value="">-- Choose Section --</option>
             {sections.map(s => (
@@ -206,7 +203,14 @@ export const InstructorGrading: React.FC = () => {
                   return (
                     <tr key={grade.enrollmentId} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       <td style={{ padding: '12px' }}>
-                        <div style={{ fontWeight: 'bold' }}>{grade.studentName}</div>
+                        <div style={{ fontWeight: 'bold' }}>
+                          {grade.studentName}
+                          {grade.published && (
+                            <span style={{ fontSize: '11px', color: '#F59E0B', marginLeft: '6px' }}>
+                              Published
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{grade.studentNumber}</div>
                       </td>
                       <td style={{ padding: '8px' }}>
@@ -218,7 +222,6 @@ export const InstructorGrading: React.FC = () => {
                           placeholder="0–30"
                           className="form-input"
                           style={{ padding: '6px 8px', fontSize: '0.9rem', width: '80px' }}
-                          disabled={grade.published}
                           value={edit.week7Score}
                           onChange={(e) => handleScoreChange(grade.enrollmentId, 'week7Score', e.target.value)}
                         />
@@ -232,7 +235,6 @@ export const InstructorGrading: React.FC = () => {
                           placeholder="0–20"
                           className="form-input"
                           style={{ padding: '6px 8px', fontSize: '0.9rem', width: '80px' }}
-                          disabled={grade.published}
                           value={edit.week12Score}
                           onChange={(e) => handleScoreChange(grade.enrollmentId, 'week12Score', e.target.value)}
                         />
@@ -246,7 +248,6 @@ export const InstructorGrading: React.FC = () => {
                           placeholder="0–10"
                           className="form-input"
                           style={{ padding: '6px 8px', fontSize: '0.9rem', width: '80px' }}
-                          disabled={grade.published}
                           value={edit.prefinalScore}
                           onChange={(e) => handleScoreChange(grade.enrollmentId, 'prefinalScore', e.target.value)}
                         />
@@ -260,7 +261,6 @@ export const InstructorGrading: React.FC = () => {
                           placeholder="0–40"
                           className="form-input"
                           style={{ padding: '6px 8px', fontSize: '0.9rem', width: '80px' }}
-                          disabled={grade.published}
                           value={edit.finalScore}
                           onChange={(e) => handleScoreChange(grade.enrollmentId, 'finalScore', e.target.value)}
                         />
@@ -292,7 +292,7 @@ export const InstructorGrading: React.FC = () => {
                           <button
                             className="glass-btn primary"
                             style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                            disabled={grade.published || savingId === grade.enrollmentId}
+                            disabled={savingId === grade.enrollmentId}
                             onClick={() => handleSave(grade.enrollmentId)}
                           >
                             {savingId === grade.enrollmentId ? 'Saving...' : 'Save'}

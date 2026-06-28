@@ -12,6 +12,7 @@ export const AppLayout: React.FC = () => {
           { to: '/student/profile', label: 'Profile', icon: '👤' },
           { to: '/student/results', label: 'Academic Results', icon: '📊' },
           { to: '/student/schedule', label: 'Weekly Schedule', icon: '📅' },
+          // { to: '/student/assignments', label: 'Assignments', icon: '📝' }, // disabled until primary API has assignments
           { to: '/student/register', label: 'Register Courses', icon: '📝' },
           { to: '/student/notifications', label: 'Notifications', icon: '🔔' },
         ];
@@ -20,10 +21,12 @@ export const AppLayout: React.FC = () => {
           { to: '/instructor/sections', label: 'My Sections', icon: '📚' },
           { to: '/instructor/attendance', label: 'Take Attendance', icon: '⏱️' },
           { to: '/instructor/grading', label: 'Grading Portal', icon: '✍️' },
+          // { to: '/instructor/assignments', label: 'Assignments', icon: '📝' }, // disabled until primary API has assignments
         ];
       case 'admin':
         return [
           { to: '/admin/students', label: 'Students Directory', icon: '👥' },
+          { to: '/admin/instructors', label: 'Instructors', icon: '🧑‍🏫' },
           { to: '/admin/courses', label: 'Courses Catalog', icon: '📖' },
           { to: '/admin/sections', label: 'Sections Management', icon: '🗓️' },
           { to: '/admin/policies', label: 'Grading Policies', icon: '⚖️' },

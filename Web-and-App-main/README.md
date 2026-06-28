@@ -1,48 +1,79 @@
-# AAST Student Portal - Local Deployment & Configuration
+# AAST Student Portal — Smart Academic Management System
 
-This project is configured for local development and demonstration using Docker Compose and Flutter.
+A full-stack graduation project for the Arab Academy for Science,
+Technology and Maritime Transport (AAST) — Computer Engineering Department.
 
-## 1. Quick Start with Docker Compose
+**Supervisor:** Dr. Ahmed El-Deeb  
+**Year:** 2025
 
-To build and run Keycloak, the ASP.NET Core API backend, and the React frontend web application in one command, run:
+## Tech Stack
 
+| Layer | Technology |
+|-------|-----------|
+| Backend API | ASP.NET Core 8, C#, Entity Framework Core, SQLite |
+| Web Frontend | React 19, TypeScript, Vite, Tailwind CSS |
+| Mobile App | Flutter 3, Dart, Android |
+| Authentication | Keycloak 24, OAuth2, OIDC, JWT |
+| Notifications | Firebase Cloud Messaging (FCM) |
+| AI Features | Face Recognition (FastAPI + face_recognition) |
+| Deployment | Docker Compose |
+
+## Features
+
+- **3 User Roles:** Admin, Instructor, Student
+- **Grade Management:** Enter, edit, and publish grades with auto FCM notification
+- **Smart Attendance:** QR code, PIN, and Face Recognition check-in with geofence
+- **Mobile App:** Flutter native Android app with real-time data
+- **AI Grade Prediction:** Predicts final exam score from mid-semester performance
+- **Admin Portal:** Section management, bulk import, account creation
+
+## Quick Start
+
+### Prerequisites
+- Docker Desktop
+- Python 3.x
+- Flutter SDK (for mobile)
+
+### Run the project
 ```bash
-docker compose up --build
+# Clone the repo
+git clone https://github.com/hazemehabfawzy/aast-student-portal.git
+cd aast-student-portal
+
+# Copy and configure settings
+cp StudentPortal.Api/appsettings.example.json StudentPortal.Api/appsettings.json
+# Edit appsettings.json with your Keycloak and Firebase credentials
+
+# Add your google-services.json to mobile/android/app/
+# Add your firebase-service-account.json to StudentPortal.Api/
+
+# Start all services
+docker compose up -d
 ```
 
-### Services Map:
-- **Keycloak Admin & Realms**: [http://localhost:8080](http://localhost:8080)
-- **Backend Swagger API**: [http://localhost:5000/swagger](http://localhost:5000/swagger)
-- **Web Frontend Application**: [http://localhost:3000](http://localhost:3000)
+### Demo Credentials
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | admin.portal | Admin@123 |
+| Instructor | instructor.one | Instructor@123 |
+| Student | student.one | hazem123 |
 
----
+### Access Points
+- Web App: http://localhost:3000
+- API Swagger: http://localhost:5000/swagger
+- Keycloak Admin: http://localhost:8080
 
-## 2. Flutter Mobile Application Integration
-
-To run the Flutter mobile application:
-
-```bash
-cd mobile
-flutter run
+## Project Structure
+```
+├── StudentPortal.Api/     # ASP.NET Core 8 backend
+├── frontend/              # React 19 web application
+├── mobile/                # Flutter 3 Android app
+├── face-service/          # Python FastAPI face recognition
+├── keycloak/              # Realm configuration
+├── data/                  # SQLite database (not committed)
+└── docker-compose.yml     # Container orchestration
 ```
 
-### Server Endpoint Routing:
-- **Android Emulator**: Set your Flutter client's base URL to point to `http://10.0.2.2:5000` (which directs to host localhost).
-- **Physical Test Devices**: Replace `localhost` or `10.0.2.2` with your machine's **local LAN IP address** (e.g. `http://192.168.1.50:5000`).
-
----
-
-## 3. Demo Credentials Reference Table
-
-Below is the list of pre-seeded accounts available for interactive testing:
-
-| Role | Username (Email) | Password | Description / Permissions |
-| :--- | :--- | :--- | :--- |
-| **Admin** | `admin@aast.edu` | `admin123` | Full CRUD across Courses, Sections, Policies, Periods, and Students. |
-| **Instructor 1** | `instructor1@aast.edu` | `TempPassword123!` | Manages Section 1 and Section 2. Accesses attendance, roster results. |
-| **Instructor 2** | `instructor2@aast.edu` | `TempPassword123!` | Manages Section 3 and Section 4. Accesses attendance, roster results. |
-| **Student 1** | `student.one` / `student1@aast.edu` | `hazem123` | Enrolled in Section 1 and Section 2. Reviews GPA, checks in to sessions. |
-| **Student 2** | `student2@aast.edu` | `TempPassword123!` | Enrolled in Section 1 and Section 2. Reviews GPA, checks in to sessions. |
-| **Student 3** | `student3@aast.edu` | `TempPassword123!` | Enrolled in Section 1 and Section 2. Reviews GPA, checks in to sessions. |
-| **Student 4** | `student4@aast.edu` | `TempPassword123!` | Enrolled in Section 1 and Section 2. Reviews GPA, checks in to sessions. |
-| **Student 5** | `student5@aast.edu` | `TempPassword123!` | Enrolled in Section 1 and Section 2. Reviews GPA, checks in to sessions. |
+## Grading Schema
+Week 7 (30) + Week 12 (20) + Coursework (10) + Final (40) = 100  
+Auto-F rule: Final score < 12/40 → Grade = F regardless of total

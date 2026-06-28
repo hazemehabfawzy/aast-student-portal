@@ -15,4 +15,6 @@ public class Student
 
     // Navigation property
     public Department? Department { get; set; }
+
+    public string? FaceEncodingKey { get; set; }
 }

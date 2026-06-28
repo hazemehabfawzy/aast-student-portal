@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudentPortal.Api.Data;
 using StudentPortal.Api.Models.Entities;
+using StudentPortal.Api.Services.Implementations;
 
 using System.Security.Claims;
 
@@ -111,6 +112,47 @@ public class StudentController : ControllerBase
         return Ok(student);
     }
 
+    [HttpPost("create")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> CreateStudentAccount(
+        [FromBody] CreateStudentAccountDto dto,
+        [FromServices] KeycloakAdminService keycloak)
+    {
+        string keycloakId;
+        try
+        {
+            keycloakId = await keycloak.CreateUser(
+                dto.Username, dto.Password,
+                dto.FirstName, dto.LastName,
+                dto.Email, "student");
+        }
+        catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
+
+        var defaultDept = dto.DepartmentId != Guid.Empty
+            ? dto.DepartmentId
+            : (await _context.Departments.Select(d => d.Id).FirstOrDefaultAsync());
+
+        var student = new Student
+        {
+            Id            = Guid.NewGuid(),
+            FullName      = $"{dto.FirstName} {dto.LastName}",
+            Email         = dto.Email,
+            StudentNumber = dto.StudentNumber,
+            KeycloakId    = keycloakId,
+            DepartmentId  = defaultDept,
+        };
+        _context.Students.Add(student);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            student.Id,
+            student.FullName,
+            student.KeycloakId,
+            message = $"Login: {dto.Username} / {dto.Password}"
+        });
+    }
+
     [HttpPut("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> UpdateStudent(Guid id, [FromBody] Student model)
@@ -157,4 +199,15 @@ public class StudentController : ControllerBase
 
         return Ok(student);
     }
+}
+
+public class CreateStudentAccountDto
+{
+    public string Username      { get; set; } = "";
+    public string Password      { get; set; } = "";
+    public string FirstName     { get; set; } = "";
+    public string LastName      { get; set; } = "";
+    public string Email         { get; set; } = "";
+    public string StudentNumber { get; set; } = "";
+    public Guid   DepartmentId  { get; set; }
 }

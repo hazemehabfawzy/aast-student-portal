@@ -224,7 +224,8 @@ public class AttendanceController : ControllerBase
                 .Select(s => new {
                     sessionId = s.Id,
                     courseCode = s.Section!.Course!.Code,
-                    courseName = s.Section.Course.Name
+                    courseName = s.Section.Course.Name,
+                    method = s.Method
                 })
                 .ToListAsync();
 
@@ -235,4 +236,101 @@ public class AttendanceController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpPost("attendance/check-in/face")]
+    [Authorize(Policy = "StudentOnly")]
+    public async Task<IActionResult> FaceCheckInStudent([FromBody] FaceCheckInStudentRequest request)
+    {
+        if (!Request.Headers.TryGetValue("X-Client-Platform", out var platformHeader) ||
+            platformHeader.ToString() != "mobile")
+        {
+            return StatusCode(403, new { message = "Face check-in is only available from the mobile app." });
+        }
+
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        try
+        {
+            var keycloakId = GetCurrentKeycloakId();
+            var result = await _attendanceService.FaceStudentCheckInAsync(keycloakId, request.SessionId, request.Image);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex) { return StatusCode(403, new { message = ex.Message }); }
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { message = ex.Message }); }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
+    }
+
+    [HttpPost("attendance/sessions/{id:guid}/face-checkin")]
+    [Authorize(Policy = "InstructorOnly")]
+    public async Task<IActionResult> FaceCheckIn(Guid id, [FromBody] FaceCheckInRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var keycloakId = GetCurrentKeycloakId();
+            var response = await _attendanceService.FaceCheckInAsync(keycloakId, id, request.Image);
+            return Ok(response);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("sections/{sectionId:guid}/enrollments/{enrollmentId:guid}/withdrawal-decision")]
+    [Authorize(Policy = "InstructorOnly")]
+    public async Task<IActionResult> WithdrawalDecision(Guid sectionId, Guid enrollmentId, [FromBody] WithdrawalDecisionRequest request)
+    {
+        try
+        {
+            var keycloakId = GetCurrentKeycloakId();
+            await _attendanceService.DecidedWithdrawalAsync(keycloakId, sectionId, enrollmentId, request.Approve);
+            return Ok(new { message = "Decision recorded successfully." });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+}
+
+public class FaceCheckInRequest
+{
+    public string Image { get; set; } = string.Empty;
+}
+
+public class FaceCheckInStudentRequest
+{
+    public string Image { get; set; } = string.Empty;
+    public Guid SessionId { get; set; }
+}
+
+public class WithdrawalDecisionRequest
+{
+    public bool Approve { get; set; }
 }

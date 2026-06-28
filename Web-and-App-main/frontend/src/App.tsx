@@ -11,14 +11,17 @@ import { StudentResults } from './pages/student/StudentResults';
 import { StudentSchedule } from './pages/student/StudentSchedule';
 import { StudentRegister } from './pages/student/StudentRegister';
 import { StudentNotifications } from './pages/student/StudentNotifications';
+// import { StudentAssignments } from './pages/student/StudentAssignments'; // disabled until primary API has assignments
 
 // Instructor Pages
 import { InstructorSections } from './pages/instructor/InstructorSections';
 import { InstructorAttendance } from './pages/instructor/InstructorAttendance';
 import { InstructorGrading } from './pages/instructor/InstructorGrading';
+// import { InstructorAssignments } from './pages/instructor/InstructorAssignments'; // disabled until primary API has assignments
 
 // Admin Pages
 import { AdminStudents } from './pages/admin/AdminStudents';
+import { AdminInstructors } from './pages/admin/AdminInstructors';
 import { AdminCourses } from './pages/admin/AdminCourses';
 import { AdminSections } from './pages/admin/AdminSections';
 import { AdminPolicies } from './pages/admin/AdminPolicies';
@@ -55,6 +58,7 @@ function App() {
             <Route path="/student/schedule" element={<StudentSchedule />} />
             <Route path="/student/register" element={<StudentRegister />} />
             <Route path="/student/notifications" element={<StudentNotifications />} />
+            {/* <Route path="/student/assignments" element={<StudentAssignments />} /> */}
           </Route>
         </Route>
 
@@ -64,6 +68,7 @@ function App() {
             <Route path="/instructor/sections" element={<InstructorSections />} />
             <Route path="/instructor/attendance" element={<InstructorAttendance />} />
             <Route path="/instructor/grading" element={<InstructorGrading />} />
+            {/* <Route path="/instructor/assignments" element={<InstructorAssignments />} /> */}
           </Route>
         </Route>
 
@@ -71,6 +76,7 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
           <Route element={<AppLayout />}>
             <Route path="/admin/students" element={<AdminStudents />} />
+            <Route path="/admin/instructors" element={<AdminInstructors />} />
             <Route path="/admin/courses" element={<AdminCourses />} />
             <Route path="/admin/sections" element={<AdminSections />} />
             <Route path="/admin/policies" element={<AdminPolicies />} />

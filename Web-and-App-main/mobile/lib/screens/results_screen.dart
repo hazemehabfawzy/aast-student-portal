@@ -73,7 +73,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
                           return Card(
                             color: const Color(0xFF1E293B),
-                            margin: const EdgeInsets.bottom(16),
+                            margin: const EdgeInsets.only(bottom: 16),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
@@ -97,12 +97,12 @@ class _ResultsScreenState extends State<ResultsScreen> {
                                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: grade != null && !grade.startsWith('F') 
-                                              ? Colors.emeraldAccent.withOpacity(0.1)
+                                              ? Colors.greenAccent.withOpacity(0.1)
                                               : Colors.redAccent.withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(6),
                                           border: Border.all(
                                             color: grade != null && !grade.startsWith('F') 
-                                                ? Colors.emeraldAccent
+                                                ? Colors.greenAccent
                                                 : Colors.redAccent,
                                           ),
                                         ),
@@ -110,7 +110,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                                           grade ?? 'Pending',
                                           style: TextStyle(
                                             color: grade != null && !grade.startsWith('F') 
-                                                ? Colors.emeraldAccent
+                                                ? Colors.greenAccent
                                                 : Colors.redAccent,
                                             fontWeight: FontWeight.bold,
                                           ),

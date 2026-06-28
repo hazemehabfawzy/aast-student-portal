@@ -49,7 +49,8 @@ public static class KeycloakAuthExtensions
                 ValidIssuers = new[]
                 {
                     authority,
-                    "http://localhost:8080/realms/student-portal"
+                    "http://localhost:8080/realms/student-portal",
+                    "http://10.0.2.2:8080/realms/student-portal"
                 },
                 ValidateAudience = false,
                 ValidateLifetime = true,

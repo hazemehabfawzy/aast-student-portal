@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+.npm
+
+# Build outputs
+frontend/dist/
+frontend/build/
+mobile/build/
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+**/bin/
+**/obj/
+
+# Sensitive files — NEVER commit these
+StudentPortal.Api/firebase-service-account.json
+mobile/android/app/google-services.json
+StudentPortal.Api/appsettings.Development.json
+**/local.properties
+**/*.pfx
+**/*.p12
+**/.env
+**/.env.local
+**/.env.production
+
+# Database — contains real student data
+data/student_portal.db
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# IDE and OS
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+keycloak/data/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+face-service/__pycache__/
+face-service/*.pkl
+
+# Flutter
+mobile/.packages
+mobile/pubspec.lock
+
+# Logs
+*.log
+logs/
+
+# Heap dumps and temp files
+**/*.hprof

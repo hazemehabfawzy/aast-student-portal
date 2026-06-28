@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../api/api_client.dart';
+import 'doctors_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -151,11 +152,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const Divider(color: Colors.white10, height: 24),
                         _buildRow('Total Hours', '$_totalCredits Credits'),
                         const Divider(color: Colors.white10, height: 24),
-                        _buildRow('Est. Cumulative GPA', _gpa.toStringAsFixed(2), color: Colors.emeraldAccent),
+                        _buildRow('Est. Cumulative GPA', _gpa.toStringAsFixed(2), color: Colors.greenAccent),
                       ],
                     ),
                   ),
                   const SizedBox(height: 32),
+
+                  // Talk to Doctor Button
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const DoctorsScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.local_hospital_outlined, color: Colors.white),
+                    label: const Text('Talk to a Doctor', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent.withOpacity(0.12),
+                      side: const BorderSide(color: Colors.blueAccent),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
 
                   // Log Out Button
                   ElevatedButton.icon(

@@ -36,7 +36,7 @@
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "redirectUris": [
         "com.studentportal.app:/oauth2redirect",
         "com.studentportal.app://oauth-callback",

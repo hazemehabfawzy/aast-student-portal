@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 
 interface Section {
-  id: number;
+  id: string;
   courseCode: string;
   courseName: string;
   scheduleJson: string;
   capacity: number;
+  hasFaceAttendance?: boolean;
 }
 
 export const InstructorSections: React.FC = () => {
@@ -17,11 +18,12 @@ export const InstructorSections: React.FC = () => {
 
   // Modal / Session creation state
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
-  const [method, setMethod] = useState<'pin' | 'qr'>('pin');
+  const [method, setMethod] = useState<'pin' | 'qr' | 'face'>('pin');
   const [minutes, setMinutes] = useState<number>(15);
   const [lat, setLat] = useState<number>(30.0444);
   const [lng, setLng] = useState<number>(31.2357);
   const [radius, setRadius] = useState<number>(50);
+  const [week, setWeek] = useState<number>(1);
   const [submitting, setSubmitting] = useState(false);
 
   const navigate = useNavigate();
@@ -51,7 +53,8 @@ export const InstructorSections: React.FC = () => {
       minutes,
       lat,
       lng,
-      radiusMeters: radius
+      radiusMeters: radius,
+      week
     };
 
     apiClient.post('/attendance/sessions', payload)
@@ -64,6 +67,8 @@ export const InstructorSections: React.FC = () => {
             method,
             sectionName: selectedSection.courseName,
             sectionCode: selectedSection.courseCode,
+            sectionId: selectedSection.id,
+            week: week,
           }
         });
       })
@@ -171,10 +176,25 @@ export const InstructorSections: React.FC = () => {
                   className="form-input"
                   style={{ background: 'rgba(15,23,42,0.9)' }}
                   value={method}
-                  onChange={(e) => setMethod(e.target.value as 'pin' | 'qr')}
+                  onChange={(e) => setMethod(e.target.value as 'pin' | 'qr' | 'face')}
                 >
                   <option value="pin">Numeric PIN (Static)</option>
                   <option value="qr">Rotating Token (QR Code)</option>
+                  <option value="face">Face Recognition Attendance</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Week (1–15)</label>
+                <select
+                  className="form-input"
+                  style={{ background: 'rgba(15,23,42,0.9)' }}
+                  value={week}
+                  onChange={(e) => setWeek(Number(e.target.value))}
+                >
+                  {Array.from({ length: 15 }, (_, i) => i + 1).map((w) => (
+                    <option key={w} value={w}>Week {w}</option>
+                  ))}
                 </select>
               </div>
 

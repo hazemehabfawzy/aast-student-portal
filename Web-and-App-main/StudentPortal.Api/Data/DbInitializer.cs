@@ -236,14 +236,6 @@ public static class DbInitializer
             instructor1 = new Instructor { Id = Guid.NewGuid(), KeycloakId = instructorKey1, FullName = "Instructor One", DepartmentId = dept.Id };
             await db.Instructors.AddAsync(instructor1);
         }
-
-        var instructorKey2 = await ProvisionOrFallbackKeycloakUserAsync("instructor2@aast.edu", "Instructor Two", "instructor", sp);
-        var instructor2 = await db.Instructors.FirstOrDefaultAsync(i => i.KeycloakId == instructorKey2);
-        if (instructor2 == null)
-        {
-            instructor2 = new Instructor { Id = Guid.NewGuid(), KeycloakId = instructorKey2, FullName = "Instructor Two", DepartmentId = dept.Id };
-            await db.Instructors.AddAsync(instructor2);
-        }
         await db.SaveChangesAsync();
 
         // 8. Seed 5 Demo Students
@@ -282,6 +274,47 @@ public static class DbInitializer
             studentIds.Add(student.Id);
         }
 
+        // 8b. Seed 3 Face Recognition Students
+        var faceStudentsData = new[]
+        {
+            new { Number = "S001", Name = "Omar Samir", Key = "S001", Email = "s001@aast.edu" },
+            new { Number = "S002", Name = "Omar Adel", Key = "S002", Email = "s002@aast.edu" },
+            new { Number = "S003", Name = "Hazem Elfol", Key = "S003", Email = "s003@aast.edu" }
+        };
+
+        var faceStudentIds = new List<Guid>();
+        foreach (var item in faceStudentsData)
+        {
+            var keycloakId = await ProvisionOrFallbackKeycloakUserAsync(item.Email, item.Name, "student", sp);
+            var student = await db.Students.FirstOrDefaultAsync(s => s.StudentNumber == item.Number);
+            if (student == null)
+            {
+                student = new Student
+                {
+                    Id = Guid.NewGuid(),
+                    KeycloakId = keycloakId,
+                    StudentNumber = item.Number,
+                    FullName = item.Name,
+                    Email = item.Email,
+                    DateOfBirth = new DateOnly(2001, 1, 1),
+                    Phone = "01000000000",
+                    Address = "Cairo, Egypt",
+                    DepartmentId = dept.Id,
+                    YearLevel = 1,
+                    FaceEncodingKey = item.Key
+                };
+                await db.Students.AddAsync(student);
+            }
+            else
+            {
+                student.Email = item.Email;
+                student.FaceEncodingKey = item.Key;
+                db.Students.Update(student);
+            }
+            await db.SaveChangesAsync();
+            faceStudentIds.Add(student.Id);
+        }
+
         // 9. Seed 4 Demo Sections
         var schedule1 = "[{\"day\":\"Sun\",\"startTime\":\"8:30 AM\",\"endTime\":\"10:00 AM\",\"room\":\"C201\"},{\"day\":\"Tue\",\"startTime\":\"8:30 AM\",\"endTime\":\"10:00 AM\",\"room\":\"C201\"}]";
         var schedule2 = "[{\"day\":\"Sun\",\"startTime\":\"12:30 PM\",\"endTime\":\"2:00 PM\",\"room\":\"C202\"},{\"day\":\"Tue\",\"startTime\":\"12:30 PM\",\"endTime\":\"2:00 PM\",\"room\":\"C202\"}]";
@@ -289,14 +322,22 @@ public static class DbInitializer
         var schedule4 = "[{\"day\":\"Sat\",\"startTime\":\"2:30 PM\",\"endTime\":\"4:00 PM\",\"room\":\"A301\"},{\"day\":\"Mon\",\"startTime\":\"2:30 PM\",\"endTime\":\"4:00 PM\",\"room\":\"A301\"}]";
         
         var sections = await db.Sections.Where(s => s.SemesterId == semester.Id).ToListAsync();
-        if (sections.Count < 4)
+        if (sections.Count < 4 || sections.Any(s => s.InstructorId != instructor1.Id))
         {
+            // Clear dependent entities first to avoid FK constraints
+            db.AttendanceRecords.RemoveRange(await db.AttendanceRecords.ToListAsync());
+            db.AttendanceSessions.RemoveRange(await db.AttendanceSessions.ToListAsync());
+            db.Results.RemoveRange(await db.Results.ToListAsync());
+            db.Enrollments.RemoveRange(await db.Enrollments.ToListAsync());
+            db.Sections.RemoveRange(sections);
+            await db.SaveChangesAsync();
+
             var newSections = new List<Section>
             {
                 new() { Id = Guid.NewGuid(), CourseId = course1.Id, InstructorId = instructor1.Id, SemesterId = semester.Id, ScheduleJson = schedule1, Capacity = 30, IsActive = true },
                 new() { Id = Guid.NewGuid(), CourseId = course2.Id, InstructorId = instructor1.Id, SemesterId = semester.Id, ScheduleJson = schedule2, Capacity = 30, IsActive = true },
-                new() { Id = Guid.NewGuid(), CourseId = course1.Id, InstructorId = instructor2.Id, SemesterId = semester.Id, ScheduleJson = schedule3, Capacity = 30, IsActive = true },
-                new() { Id = Guid.NewGuid(), CourseId = course2.Id, InstructorId = instructor2.Id, SemesterId = semester.Id, ScheduleJson = schedule4, Capacity = 30, IsActive = true }
+                new() { Id = Guid.NewGuid(), CourseId = course1.Id, InstructorId = instructor1.Id, SemesterId = semester.Id, ScheduleJson = schedule3, Capacity = 30, IsActive = true },
+                new() { Id = Guid.NewGuid(), CourseId = course2.Id, InstructorId = instructor1.Id, SemesterId = semester.Id, ScheduleJson = schedule4, Capacity = 30, IsActive = true }
             };
 
             await db.Sections.AddRangeAsync(newSections);
@@ -305,8 +346,8 @@ public static class DbInitializer
         }
 
         // 10. Enroll all 5 students in Section 1 and Section 2
-        var section1 = sections[0];
-        var section2 = sections[1];
+        var section1 = sections.First(s => s.CourseId == course1.Id && s.InstructorId == instructor1.Id);
+        var section2 = sections.First(s => s.CourseId == course2.Id && s.InstructorId == instructor1.Id);
 
         foreach (var studentId in studentIds)
         {
@@ -326,7 +367,33 @@ public static class DbInitializer
         }
         await db.SaveChangesAsync();
 
-        // 11. Seed past Attendance Sessions and Records for Section 1 and Section 2
+        // Enroll all 3 face students into Section 1 with FaceAttendanceEnabled = true
+        foreach (var studentId in faceStudentIds)
+        {
+            var enrollExists = await db.Enrollments.AnyAsync(e => e.StudentId == studentId && e.SectionId == section1.Id);
+            if (!enrollExists)
+            {
+                var enroll = new Enrollment
+                {
+                    Id = Guid.NewGuid(),
+                    StudentId = studentId,
+                    SectionId = section1.Id,
+                    WarningSent = false,
+                    FaceAttendanceEnabled = true
+                };
+                await db.Enrollments.AddAsync(enroll);
+            }
+            else
+            {
+                var enroll = await db.Enrollments.FirstAsync(e => e.StudentId == studentId && e.SectionId == section1.Id);
+                enroll.FaceAttendanceEnabled = true;
+                db.Enrollments.Update(enroll);
+            }
+        }
+        await db.SaveChangesAsync();
+
+        // 11. Seed past Attendance Sessions and Records for Section 1 and Section 2 (Disabled for clean week 1 testing)
+        /*
         var enrolledSections = new[] { section1, section2 };
         foreach (var sec in enrolledSections)
         {
@@ -349,7 +416,8 @@ public static class DbInitializer
                         CodeExpiresAt = startTime.AddMinutes(90),
                         Lat = 30.0818,
                         Lng = 31.3235,
-                        RadiusMeters = 50
+                        RadiusMeters = 50,
+                        Week = sessionIndex
                     };
                     await db.AttendanceSessions.AddAsync(session);
                     await db.SaveChangesAsync();
@@ -373,6 +441,7 @@ public static class DbInitializer
                 }
             }
         }
+        */
 
         // 12. Seed 1 published Result per enrollment
         var allEnrollments = await db.Enrollments

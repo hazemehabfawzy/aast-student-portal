@@ -1,0 +1,22 @@
+{
+  "project_info": {
+    "project_id": "YOUR_FIREBASE_PROJECT_ID",
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "YOUR_APP_ID",
+        "android_client_info": {
+          "package_name": "com.example.student_portal"
+        }
+      },
+      "api_key": [{ "current_key": "YOUR_API_KEY" }],
+      "services": {
+        "appinvite_service": { "other_platform_oauth_client": [] }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

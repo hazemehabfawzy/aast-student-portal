@@ -30,6 +30,7 @@ services:
       Keycloak__AdminApi__BaseUrl: http://keycloak:8080
       Keycloak__AdminApi__TokenUrl: http://keycloak:8080/realms/master/protocol/openid-connect/token
       Keycloak__AdminApi__ClientId: admin-cli
+      FaceService__BaseUrl: http://face-service:8000
     volumes:
       - ./data:/app/data
     ports:
@@ -46,3 +47,12 @@ services:
       - "3000:80"
     depends_on:
       - api
+
+  face-service:
+    build:
+      context: ./face-service
+      dockerfile: Dockerfile
+    volumes:
+      - ./face-service:/app
+    ports:
+      - "8000:8000"

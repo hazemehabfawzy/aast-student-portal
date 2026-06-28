@@ -13,6 +13,7 @@ public class AttendanceSession
     public double Lat { get; set; }
     public double Lng { get; set; }
     public int RadiusMeters { get; set; }
+    public int Week { get; set; } = 1;
 
     // Navigation properties
     public Section? Section { get; set; }

@@ -11,4 +11,15 @@ public interface IAttendanceService
     Task CloseSessionAsync(string instructorKeycloakId, Guid sessionId);
     Task<object> GetSectionAttendanceAsync(string instructorKeycloakId, Guid sectionId);
     Task<object> GetStudentMeAttendanceAsync(string studentKeycloakId);
+    Task<List<FaceCheckInResult>> FaceCheckInAsync(string instructorKeycloakId, Guid sessionId, string base64Image);
+    Task<object> FaceStudentCheckInAsync(string studentKeycloakId, Guid sessionId, string base64Image);
+    Task DecidedWithdrawalAsync(string instructorKeycloakId, Guid sectionId, Guid enrollmentId, bool approve);
+}
+
+public class FaceCheckInResult
+{
+    public string Status { get; set; } = string.Empty; // "success", "not_registered", "no_face"
+    public string? StudentKey { get; set; }
+    public string? Name { get; set; }
+    public double? Confidence { get; set; }
 }

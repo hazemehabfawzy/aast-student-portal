@@ -75,7 +75,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Color _getIconColor(String type) {
     switch (type) {
-      case 'result': return Colors.emeraldAccent;
+      case 'result': return Colors.greenAccent;
       case 'attendance_warning': return Colors.amberAccent;
       default: return Colors.blueAccent;
     }
@@ -111,7 +111,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             opacity: isRead ? 0.6 : 1.0,
                             child: Card(
                               color: const Color(0xFF1E293B),
-                              margin: const EdgeInsets.bottom(12),
+                              margin: const EdgeInsets.only(bottom: 12),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 side: BorderSide(

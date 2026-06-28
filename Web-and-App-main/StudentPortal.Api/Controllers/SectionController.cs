@@ -53,7 +53,8 @@ public class SectionController : ControllerBase
                     CourseCode = s.Course!.Code,
                     CourseName = s.Course.Name,
                     s.ScheduleJson,
-                    s.Capacity
+                    s.Capacity,
+                    HasFaceAttendance = _context.Enrollments.Any(e => e.SectionId == s.Id && e.FaceAttendanceEnabled && !e.IsWithdrawn)
                 })
                 .ToListAsync();
             return Ok(sections);

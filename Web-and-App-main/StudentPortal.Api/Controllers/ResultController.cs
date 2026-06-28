@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using StudentPortal.Api.Data;
 using StudentPortal.Api.Models.DTOs.Requests;
 using StudentPortal.Api.Services.Interfaces;
 
@@ -11,10 +13,12 @@ namespace StudentPortal.Api.Controllers;
 public class ResultController : ControllerBase
 {
     private readonly IResultService _resultService;
+    private readonly AppDbContext _db;
 
-    public ResultController(IResultService resultService)
+    public ResultController(IResultService resultService, AppDbContext db)
     {
         _resultService = resultService;
+        _db = db;
     }
 
     private string GetCurrentKeycloakId()
@@ -65,6 +69,7 @@ public class ResultController : ControllerBase
     }
 
     [HttpGet("sections/{sectionId:guid}/results")]
+    [HttpGet("instructor/sections/{sectionId:guid}/results")]
     [Authorize(Policy = "InstructorOnly")]
     public async Task<IActionResult> GetSectionResults(Guid sectionId)
     {
@@ -89,24 +94,19 @@ public class ResultController : ControllerBase
     }
 
     [HttpPut("results/{enrollmentId:guid}")]
+    [HttpPut("instructor/results/{enrollmentId:guid}")]
     [Authorize(Policy = "InstructorOnly")]
     public async Task<IActionResult> UpdateResult(Guid enrollmentId, [FromBody] UpdateScoresRequest request)
     {
         if (!ModelState.IsValid)
-        {
             return BadRequest(ModelState);
-        }
 
-        // Validate score ranges
         if (request.Week7Score.HasValue && (request.Week7Score < 0 || request.Week7Score > 30))
             return BadRequest("Week 7 score must be between 0 and 30");
-
         if (request.Week12Score.HasValue && (request.Week12Score < 0 || request.Week12Score > 20))
             return BadRequest("Week 12 score must be between 0 and 20");
-
         if (request.PrefinalScore.HasValue && (request.PrefinalScore < 0 || request.PrefinalScore > 10))
             return BadRequest("Prefinal score must be between 0 and 10");
-
         if (request.FinalScore.HasValue && (request.FinalScore < 0 || request.FinalScore > 40))
             return BadRequest("Final score must be between 0 and 40");
 
@@ -114,20 +114,24 @@ public class ResultController : ControllerBase
         {
             var keycloakId = GetCurrentKeycloakId();
             await _resultService.UpdateResultAsync(keycloakId, enrollmentId, request);
-            return Ok(new { message = "Result updated successfully." });
+
+            var updated = await _db.Results.FirstOrDefaultAsync(r => r.EnrollmentId == enrollmentId);
+            return Ok(new
+            {
+                enrollmentId,
+                totalScore    = updated?.TotalScore,
+                letterGrade   = updated?.LetterGrade,
+                week7Score    = updated?.Week7Score,
+                week12Score   = updated?.Week12Score,
+                prefinalScore = updated?.PrefinalScore,
+                finalScore    = updated?.FinalScore,
+                published     = updated?.Published ?? false,
+                message       = "Result updated successfully."
+            });
         }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        catch (UnauthorizedAccessException ex) { return StatusCode(403, new { message = ex.Message }); }
+        catch (KeyNotFoundException ex)        { return NotFound(new { message = ex.Message }); }
+        catch (Exception ex)                   { return BadRequest(new { message = ex.Message }); }
     }
 
     [HttpPost("results/{enrollmentId:guid}/publish")]

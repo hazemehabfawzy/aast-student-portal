@@ -19,6 +19,8 @@ public class StudentPortalDbContext : DbContext
     public DbSet<AttendanceSession> AttendanceSessions => Set<AttendanceSession>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<Grade> Grades => Set<Grade>();
+    public DbSet<Assignment> Assignments => Set<Assignment>();
+    public DbSet<AssignmentAttachment> AssignmentAttachments => Set<AssignmentAttachment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +41,12 @@ public class StudentPortalDbContext : DbContext
             .HasOne(i => i.User)
             .WithOne(u => u.Instructor)
             .HasForeignKey<Instructor>(i => i.Id)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Assignment>()
+            .HasMany(a => a.Attachments)
+            .WithOne(a => a.Assignment)
+            .HasForeignKey(a => a.AssignmentId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

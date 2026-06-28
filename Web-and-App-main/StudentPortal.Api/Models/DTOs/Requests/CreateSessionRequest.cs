@@ -10,7 +10,7 @@ public class CreateSessionRequest
     public int? DurationMinutes { get; set; }
 
     [Required]
-    [RegularExpression("^(qr|pin)$", ErrorMessage = "Method must be 'qr' or 'pin'.")]
+    [RegularExpression("^(qr|pin|face)$", ErrorMessage = "Method must be 'qr', 'pin', or 'face'.")]
     public string Method { get; set; } = string.Empty;
 
     [Required]
@@ -22,4 +22,7 @@ public class CreateSessionRequest
     [Required]
     [Range(1, 1000, ErrorMessage = "Radius must be between 1 and 1000 meters.")]
     public int RadiusMeters { get; set; }
+
+    [Range(1, 15, ErrorMessage = "Week must be between 1 and 15.")]
+    public int Week { get; set; } = 1;
 }

@@ -24,6 +24,9 @@ class AuthService extends ChangeNotifier {
   String? _username;
   String? get username => _username;
 
+  String? _role;
+  String? get role => _role;
+
   // Keycloak Details (Public Client with PKCE)
   static String keycloakRealmUrl = AppConfig.keycloakRealmUrl;
   static const String _clientId = AppConfig.keycloakClientId;
@@ -58,14 +61,15 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final AuthorizationTokenResponse? result = await _appAuth.authorizeAndExchangeCode(
-        AuthorizationTokenRequest(
-          _clientId,
-          _redirectUrl,
-          issuer: keycloakRealmUrl,
-          scopes: ['openid', 'profile', 'email'],
-        ),
-      );
+final AuthorizationTokenResponse? result = await _appAuth.authorizeAndExchangeCode(
+         AuthorizationTokenRequest(
+           _clientId,
+           _redirectUrl,
+           issuer: keycloakRealmUrl,
+           scopes: ['openid', 'profile', 'email'],
+           allowInsecureConnections: true,
+         ),
+       );
 
       if (result != null && result.accessToken != null) {
         await _secureStorage.write(key: 'access_token', value: result.accessToken);
@@ -104,6 +108,16 @@ class AuthService extends ChangeNotifier {
       _fullName = map['name'] ?? map['preferred_username'] ?? 'Student';
       _email = map['email'];
       _username = map['preferred_username'];
+
+      // Extract role if present in token (support common Keycloak claim shapes)
+      if (map['role'] != null) {
+        _role = map['role'];
+      } else if (map['roles'] != null && map['roles'] is List && (map['roles'] as List).isNotEmpty) {
+        _role = (map['roles'] as List).first.toString();
+      } else if (map['realm_access'] != null && map['realm_access']['roles'] != null) {
+        final roles = List<String>.from(map['realm_access']['roles']);
+        if (roles.isNotEmpty) _role = roles.first;
+      }
     } catch (e) {
       debugPrint('Error parsing token: $e');
     }

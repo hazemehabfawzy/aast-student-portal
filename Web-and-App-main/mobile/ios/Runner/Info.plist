@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required to scan QR codes for attendance check-in.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Your location is required to verify you are within the classroom geofence for attendance check-in.</string>
 </dict>
 </plist>

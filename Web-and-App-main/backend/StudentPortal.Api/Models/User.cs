@@ -14,6 +14,9 @@ public class User
     [Required]
     public string FullName { get; set; } = string.Empty;
 
+    [Phone]
+    public string? Phone { get; set; }
+
     [Required]
     public string Role { get; set; } = string.Empty; // admin, instructor, student
 

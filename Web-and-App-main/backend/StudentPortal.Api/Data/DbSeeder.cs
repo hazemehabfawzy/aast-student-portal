@@ -30,6 +30,7 @@ public static class DbSeeder
             Id = instructorId,
             Email = "instructor@aast.edu",
             FullName = "Dr. Instructor",
+            Phone = "+201234567890",
             Role = "instructor"
         };
 
@@ -38,6 +39,7 @@ public static class DbSeeder
             Id = studentId,
             Email = "student@aast.edu",
             FullName = "Student User",
+            Phone = "+201011122233",
             Role = "student"
         };
 

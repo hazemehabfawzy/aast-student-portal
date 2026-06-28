@@ -7,6 +7,7 @@ import 'screens/results_screen.dart';
 import 'screens/attendance_screen.dart';
 import 'screens/schedule_screen.dart';
 import 'screens/notifications_screen.dart';
+// assignments_screen.dart intentionally omitted (backend endpoint not yet in primary API)
 
 void main() {
   runApp(

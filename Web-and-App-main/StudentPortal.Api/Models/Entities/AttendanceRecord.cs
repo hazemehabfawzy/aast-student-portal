@@ -7,6 +7,8 @@ public class AttendanceRecord
     public Guid StudentId { get; set; }
     public DateTime CheckedInAt { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string Method { get; set; } = "pin";
+    public double? Confidence { get; set; }
 
     // Navigation properties
     public AttendanceSession? Session { get; set; }
