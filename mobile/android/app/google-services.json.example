@@ -1,0 +1,10 @@
+{
+  "_comment": "Download this file from Firebase Console",
+  "_instructions": [
+    "1. Go to https://console.firebase.google.com",
+    "2. Create or open your project",
+    "3. Add Android app with package: com.studentportal.app",
+    "4. Download google-services.json",
+    "5. Place it here: mobile/android/app/google-services.json"
+  ]
+}

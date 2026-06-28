@@ -1,0 +1,52 @@
+version: '3.8'
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME_URL: http://localhost:8080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "/bin/bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  api:
+    build:
+      context: ./StudentPortal.Api
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: Data Source=/app/data/student_portal.db
+      Keycloak__Authority: http://keycloak:8080/realms/student-portal
+      Keycloak__Audience: student-portal-api
+      Keycloak__AdminApi__BaseUrl: http://keycloak:8080
+      Keycloak__AdminApi__TokenUrl: http://keycloak:8080/realms/master/protocol/openid-connect/token
+      Keycloak__AdminApi__ClientId: admin-cli
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "5000:5000"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
