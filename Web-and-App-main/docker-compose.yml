@@ -31,6 +31,7 @@ services:
       Keycloak__AdminApi__TokenUrl: http://keycloak:8080/realms/master/protocol/openid-connect/token
       Keycloak__AdminApi__ClientId: admin-cli
       FaceService__BaseUrl: http://face-service:8000
+      PredictionService__BaseUrl: http://prediction-service:8001
     volumes:
       - ./data:/app/data
     ports:
@@ -56,3 +57,9 @@ services:
       - ./face-service:/app
     ports:
       - "8000:8000"
+
+  prediction-service:
+    build: ./prediction-service
+    ports:
+      - "8001:8001"
+    restart: unless-stopped

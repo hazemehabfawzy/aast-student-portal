@@ -40,11 +40,11 @@ public class GradingServiceTests
         {
             Id = Guid.NewGuid(),
             EnrollmentId = enrollment.Id,
-            Week7Score = 100f,   // 100 * 0.3 = 30
-            Week12Score = 90f,   // 90 * 0.2 = 18
-            PrefinalScore = 80f, // 80 * 0.1 = 8
-            FinalScore = 85f     // 85 * 0.4 = 34
-            // Expected sum: 30 + 18 + 8 + 34 = 90
+            Week7Score = 27f,    // max 30
+            Week12Score = 18f,   // max 20
+            PrefinalScore = 9f,  // max 10
+            FinalScore = 36f     // max 40
+            // Sum: 27 + 18 + 9 + 36 = 90
         };
 
         await context.Departments.AddAsync(dept);
@@ -88,18 +88,21 @@ public class GradingServiceTests
         var student = new Student { Id = Guid.NewGuid(), StudentNumber = "123", FullName = "Omar", DepartmentId = dept.Id };
         var enrollment = new Enrollment { Id = Guid.NewGuid(), StudentId = student.Id, SectionId = section.Id };
         
-        // Setup scores so they sum up exactly to the totalScore
-        // Weights: w7=0.3, w12=0.2, wpf=0.1, wf=0.4
-        // If we set Week7Score = totalScore, and all others 0, weight is 0.3, so result is totalScore * 0.3.
-        // Instead, let's just set all scores to totalScore, then total = totalScore * (0.3 + 0.2 + 0.1 + 0.4) = totalScore * 1.0 = totalScore.
+        // Decompose totalScore into valid raw-point components:
+        // Week7 max=30, Week12 max=20, Prefinal max=10, Final max=40
+        // Use floor fractions so sum always equals totalScore exactly.
+        float w7  = MathF.Floor(totalScore * 0.30f);
+        float w12 = MathF.Floor(totalScore * 0.20f);
+        float wpf = MathF.Floor(totalScore * 0.10f);
+        float wf  = totalScore - w7 - w12 - wpf;  // absorbs rounding remainder
         var result = new Result
         {
             Id = Guid.NewGuid(),
             EnrollmentId = enrollment.Id,
-            Week7Score = totalScore,
-            Week12Score = totalScore,
-            PrefinalScore = totalScore,
-            FinalScore = totalScore
+            Week7Score    = w7,
+            Week12Score   = w12,
+            PrefinalScore = wpf,
+            FinalScore    = wf
         };
 
         await context.Departments.AddAsync(dept);
