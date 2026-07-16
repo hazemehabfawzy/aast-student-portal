@@ -3597,11 +3597,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\projects\\StudentPortal\\Web-and-App-main\\backend\\StudentPortal.Api\\StudentPortal.Api.csproj",
+      "projectUniqueName": "D:\\projects\\StudentPortal\\backend\\StudentPortal.Api\\StudentPortal.Api.csproj",
       "projectName": "StudentPortal.Api",
-      "projectPath": "D:\\projects\\StudentPortal\\Web-and-App-main\\backend\\StudentPortal.Api\\StudentPortal.Api.csproj",
+      "projectPath": "D:\\projects\\StudentPortal\\backend\\StudentPortal.Api\\StudentPortal.Api.csproj",
       "packagesPath": "C:\\Users\\Hazem\\.nuget\\packages\\",
-      "outputPath": "D:\\projects\\StudentPortal\\Web-and-App-main\\backend\\StudentPortal.Api\\obj\\",
+      "outputPath": "D:\\projects\\StudentPortal\\backend\\StudentPortal.Api\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Hazem\\AppData\\Roaming\\NuGet\\NuGet.Config"

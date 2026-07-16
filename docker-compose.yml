@@ -50,3 +50,9 @@ services:
       - "3000:80"
     depends_on:
       - api
+
+  prediction-service:
+    build: ./prediction-service
+    ports:
+      - "8001:8001"
+    restart: unless-stopped

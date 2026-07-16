@@ -1,13 +1,12 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../api/api_client.dart';
 import '../config.dart';
 
 class AuthService extends ChangeNotifier {
-  final FlutterAppAuth _appAuth = const FlutterAppAuth();
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   bool _isAuthenticated = false;
   bool get isAuthenticated => _isAuthenticated;
@@ -27,11 +26,6 @@ class AuthService extends ChangeNotifier {
   String? _role;
   String? get role => _role;
 
-  // Keycloak Details (Public Client with PKCE)
-  static String keycloakRealmUrl = AppConfig.keycloakRealmUrl;
-  static const String _clientId = AppConfig.keycloakClientId;
-  static const String _redirectUrl = AppConfig.keycloakRedirectUrl;
-
   AuthService() {
     checkAuthentication();
   }
@@ -41,11 +35,10 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final savedToken = await _secureStorage.read(key: 'access_token');
+      final savedToken = await _storage.read(key: 'access_token');
       if (savedToken != null) {
-        // Simple JWT decode to extract basic details
         _parseToken(savedToken);
-        ApiClient.token = savedToken;
+        ApiClient.instance.setToken(savedToken);
         _isAuthenticated = true;
       }
     } catch (e) {
@@ -56,44 +49,51 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> login() async {
+  Future<bool> loginWithCredentials(String username, String password) async {
     _loading = true;
     notifyListeners();
 
     try {
-final AuthorizationTokenResponse? result = await _appAuth.authorizeAndExchangeCode(
-         AuthorizationTokenRequest(
-           _clientId,
-           _redirectUrl,
-           issuer: keycloakRealmUrl,
-           scopes: ['openid', 'profile', 'email'],
-           allowInsecureConnections: true,
-         ),
-       );
+      final response = await http.post(
+        Uri.parse(AppConfig.tokenEndpoint),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {
+          'grant_type': 'password',
+          'client_id': AppConfig.keycloakClientId,
+          'username': username,
+          'password': password,
+        },
+      );
 
-      if (result != null && result.accessToken != null) {
-        await _secureStorage.write(key: 'access_token', value: result.accessToken);
-        await _secureStorage.write(key: 'id_token', value: result.idToken);
-        
-        _parseToken(result.accessToken!);
-        ApiClient.token = result.accessToken;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        await _storage.write(key: 'access_token', value: data['access_token']);
+        await _storage.write(key: 'refresh_token', value: data['refresh_token']);
+        _parseToken(data['access_token']);
+        ApiClient.instance.setToken(data['access_token']);
         _isAuthenticated = true;
+        _loading = false;
+        notifyListeners();
+        return true;
       }
     } catch (e) {
-      debugPrint('Keycloak auth error: $e');
+      debugPrint('Login error: $e');
     }
 
     _loading = false;
     notifyListeners();
+    return false;
   }
 
   Future<void> logout() async {
-    await _secureStorage.deleteAll();
-    ApiClient.token = null;
+    await _storage.delete(key: 'access_token');
+    await _storage.delete(key: 'refresh_token');
+    ApiClient.instance.clearToken();
     _isAuthenticated = false;
     _fullName = null;
     _email = null;
     _username = null;
+    _role = null;
     notifyListeners();
   }
 
@@ -109,7 +109,6 @@ final AuthorizationTokenResponse? result = await _appAuth.authorizeAndExchangeCo
       _email = map['email'];
       _username = map['preferred_username'];
 
-      // Extract role if present in token (support common Keycloak claim shapes)
       if (map['role'] != null) {
         _role = map['role'];
       } else if (map['roles'] != null && map['roles'] is List && (map['roles'] as List).isNotEmpty) {

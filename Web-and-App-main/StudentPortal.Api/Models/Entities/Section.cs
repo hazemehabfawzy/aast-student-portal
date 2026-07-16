@@ -14,4 +14,5 @@ public class Section
     public Course? Course { get; set; }
     public Instructor? Instructor { get; set; }
     public Semester? Semester { get; set; }
+    public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
 }

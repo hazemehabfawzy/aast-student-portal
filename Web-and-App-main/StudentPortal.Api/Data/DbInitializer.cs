@@ -329,6 +329,7 @@ public static class DbInitializer
             db.AttendanceSessions.RemoveRange(await db.AttendanceSessions.ToListAsync());
             db.Results.RemoveRange(await db.Results.ToListAsync());
             db.Enrollments.RemoveRange(await db.Enrollments.ToListAsync());
+            db.ChatMessages.RemoveRange(await db.ChatMessages.ToListAsync());
             db.Sections.RemoveRange(sections);
             await db.SaveChangesAsync();
 

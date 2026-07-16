@@ -35,6 +35,8 @@ builder.Services.AddScoped<IResultService, ResultService>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IImportService, ImportService>();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<GradePredictionClient>();
+builder.Services.AddHttpClient<FaceRecognitionClient>();
 builder.Services.AddHostedService<AttendanceWarningJob>();
 
 builder.Services.AddCors(options =>

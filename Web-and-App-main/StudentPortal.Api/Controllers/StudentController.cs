@@ -181,6 +181,11 @@ public class StudentController : ControllerBase
         student.Address = model.Address;
         student.DepartmentId = model.DepartmentId;
         student.YearLevel = model.YearLevel;
+
+        if (!string.IsNullOrEmpty(model.Email))
+        {
+            student.Email = model.Email;
+        }
         
         // Keep StudentNumber and KeycloakId as is (read-only/identity fields unless explicitly changed, but let's allow updating them if model provides non-empty ones, though normally identity is preserved. To be safe, let's keep them read-only since standard identity is preserved, or if user passes them, we don't modify unless desired. The requirement says: "admin can edit any field including DepartmentId and YearLevel.")
         if (!string.IsNullOrEmpty(model.StudentNumber) && model.StudentNumber != student.StudentNumber)
@@ -198,6 +203,18 @@ public class StudentController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(student);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> DeleteStudent(Guid id)
+    {
+        var student = await _context.Students.FindAsync(id);
+        if (student == null) return NotFound();
+
+        _context.Students.Remove(student);
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Student deleted" });
     }
 }
 

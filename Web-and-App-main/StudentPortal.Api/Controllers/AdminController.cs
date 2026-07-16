@@ -20,6 +20,7 @@ public class AdminController : ControllerBase
     [HttpGet("sections")]
     public async Task<IActionResult> GetSections() =>
         Ok(await _db.Sections
+            .Where(s => s.IsActive)
             .Include(s => s.Course)
             .Include(s => s.Instructor)
             .Include(s => s.Semester)

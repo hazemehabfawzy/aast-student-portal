@@ -25,6 +25,7 @@ public class AppDbContext : DbContext
     public DbSet<RegistrationPeriod> RegistrationPeriods => Set<RegistrationPeriod>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

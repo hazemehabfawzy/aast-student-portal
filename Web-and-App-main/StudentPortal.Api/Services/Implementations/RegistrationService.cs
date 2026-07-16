@@ -124,6 +124,25 @@ public class RegistrationService : IRegistrationService
             throw new InvalidOperationException("Section is not available");
         }
 
+        // 2b. Prerequisite check
+        var passedCourseCodes = await _context.Results
+            .Include(r => r.Enrollment)
+                .ThenInclude(e => e!.Section)
+                    .ThenInclude(s => s!.Course)
+            .Where(r => r.Enrollment!.StudentId == student.Id
+                     && r.Published
+                     && r.LetterGrade != "F"
+                     && r.LetterGrade != null)
+            .Select(r => r.Enrollment!.Section!.Course!.Code)
+            .Distinct()
+            .ToListAsync();
+
+        if (!PrerequisiteHelper.IsPrerequisiteMet(section.Course?.PrerequisiteCode, passedCourseCodes))
+        {
+            throw new InvalidOperationException(
+                $"Prerequisite not met: {section.Course?.PrerequisiteCode}");
+        }
+
         // 3. Capacity check
         var enrolledCount = await _context.Enrollments.CountAsync(e => e.SectionId == sectionId);
         if (enrolledCount >= section.Capacity)

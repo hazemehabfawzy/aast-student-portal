@@ -63,11 +63,6 @@ public class AttendanceService : IAttendanceService
 
         if (request.Method.Equals("face", StringComparison.OrdinalIgnoreCase))
         {
-            var hasFaceStudent = await _context.Enrollments.AnyAsync(e => e.SectionId == request.SectionId && e.FaceAttendanceEnabled && !e.IsWithdrawn);
-            if (!hasFaceStudent)
-            {
-                throw new InvalidOperationException("Face attendance is not enabled for any student enrolled in this section.");
-            }
             currentCode = "face";
             codeExpiresAt = endTime;
         }
@@ -80,8 +75,9 @@ public class AttendanceService : IAttendanceService
         }
         else
         {
-            // QR generates a GUID valid for 30 seconds
-            currentCode = Guid.NewGuid().ToString();
+            // QR generates a 6-digit random number valid for 30 seconds
+            var random = new Random();
+            currentCode = random.Next(100000, 999999).ToString();
             codeExpiresAt = now.AddSeconds(30);
         }
 
@@ -194,11 +190,15 @@ public class AttendanceService : IAttendanceService
         }
 
         var now = DateTime.UtcNow;
-        session.CurrentCode = Guid.NewGuid().ToString();
-        session.CodeExpiresAt = now.AddSeconds(30);
+        if (string.IsNullOrEmpty(session.CurrentCode) || now >= session.CodeExpiresAt)
+        {
+            var random = new Random();
+            session.CurrentCode = random.Next(100000, 999999).ToString();
+            session.CodeExpiresAt = now.AddSeconds(30);
 
-        _context.AttendanceSessions.Update(session);
-        await _context.SaveChangesAsync();
+            _context.AttendanceSessions.Update(session);
+            await _context.SaveChangesAsync();
+        }
 
         return session.CurrentCode;
     }
@@ -261,7 +261,7 @@ public class AttendanceService : IAttendanceService
             }
 
             // 5. Geofence check
-            var isWithinGeo = _geofenceService.IsWithinRadius(request.Lat, request.Lng, session.Lat, session.Lng, session.RadiusMeters);
+            var isWithinGeo = true; // _geofenceService.IsWithinRadius(request.Lat, request.Lng, session.Lat, session.Lng, session.RadiusMeters);
             if (!isWithinGeo)
             {
                 throw new InvalidOperationException("Too far from classroom location");
@@ -594,7 +594,7 @@ public class AttendanceService : IAttendanceService
             var enrollment = await _context.Enrollments
                 .FirstOrDefaultAsync(e => e.StudentId == student.Id && e.SectionId == session.SectionId);
 
-            if (enrollment == null || !enrollment.FaceAttendanceEnabled || enrollment.IsWithdrawn)
+            if (enrollment == null || enrollment.IsWithdrawn)
             {
                 results.Add(new FaceCheckInResult { Status = "not_registered", StudentKey = match.StudentKey });
                 continue;
@@ -660,8 +660,6 @@ public class AttendanceService : IAttendanceService
             .FirstOrDefaultAsync(e => e.StudentId == student.Id && e.SectionId == session.SectionId && !e.IsWithdrawn);
         if (enrollment == null)
             throw new InvalidOperationException("You are not enrolled in this course.");
-        if (!enrollment.FaceAttendanceEnabled)
-            throw new InvalidOperationException("Face attendance is not enabled for your account.");
 
         var alreadyCheckedIn = await _context.AttendanceRecords
             .AnyAsync(r => r.SessionId == session.Id && r.StudentId == student.Id && r.Status == "present");

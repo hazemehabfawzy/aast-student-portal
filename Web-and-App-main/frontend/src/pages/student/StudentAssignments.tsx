@@ -14,8 +14,7 @@ export const StudentAssignments: React.FC = () => {
     try {
       const res = await apiClient.get('/assignments');
       setAssignments(res.data || []);
-    } catch (e) {
-      console.error(e);
+    } catch {
     } finally {
       setLoading(false);
     }

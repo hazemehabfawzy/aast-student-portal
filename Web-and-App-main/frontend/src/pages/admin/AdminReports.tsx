@@ -45,8 +45,7 @@ export const AdminReports: React.FC = () => {
         ]);
         setSections(secRes.data);
         setStudents(studentRes.data);
-      } catch (err) {
-        console.error('Failed to load lists for reports', err);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -72,8 +71,7 @@ export const AdminReports: React.FC = () => {
         link.click();
         document.body.removeChild(link);
       })
-      .catch((err) => {
-        console.error(err);
+      .catch(() => {
         alert('Failed to generate export file.');
       })
       .finally(() => {
@@ -99,8 +97,7 @@ export const AdminReports: React.FC = () => {
         link.click();
         document.body.removeChild(link);
       })
-      .catch((err) => {
-        console.error(err);
+      .catch(() => {
         alert('Failed to generate transcript PDF.');
       })
       .finally(() => {

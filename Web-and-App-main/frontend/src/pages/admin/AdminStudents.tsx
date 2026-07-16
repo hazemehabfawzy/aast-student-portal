@@ -13,6 +13,7 @@ interface Student {
 interface Department { id: string; name: string; }
 
 const emptyForm = { firstName: '', lastName: '', studentNumber: '', email: '', username: '', password: '', departmentId: '', showPassword: false };
+const emptyEditForm = { fullName: '', email: '', studentNumber: '', departmentId: '' };
 
 export const AdminStudents: React.FC = () => {
   const [students, setStudents]         = useState<Student[]>([]);
@@ -20,19 +21,25 @@ export const AdminStudents: React.FC = () => {
   const [loading, setLoading]           = useState(true);
   const [search, setSearch]             = useState('');
   const [showModal, setShowModal]       = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [editForm, setEditForm]         = useState(emptyEditForm);
   const [form, setForm]                 = useState(emptyForm);
   const [creating, setCreating]         = useState(false);
+  const [saving, setSaving]             = useState(false);
   const [successMsg, setSuccessMsg]     = useState('');
   const [errorMsg, setErrorMsg]         = useState('');
 
+  const loadStudents = () =>
+    apiClient.get<Student[]>('/students').then((res) => setStudents(res.data));
+
   useEffect(() => {
     Promise.all([
-      apiClient.get<Student[]>('/students'),
+      loadStudents(),
       apiClient.get<Department[]>('/departments'),
-    ]).then(([sRes, dRes]) => {
-      setStudents(sRes.data);
+    ]).then(([, dRes]) => {
       setDepartments(dRes.data);
-    }).catch(err => console.error('Failed to load', err))
+    }).catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
@@ -46,6 +53,51 @@ export const AdminStudents: React.FC = () => {
     const updated = { ...form, [field]: value };
     const autoUser = `${updated.firstName.toLowerCase()}.${updated.lastName.toLowerCase()}`.replace(/\s+/g, '');
     setForm({ ...updated, username: autoUser });
+  };
+
+  const openEdit = (student: Student) => {
+    setEditingStudent(student);
+    setEditForm({
+      fullName: student.fullName,
+      email: student.email,
+      studentNumber: student.studentNumber,
+      departmentId: student.departmentId,
+    });
+    setErrorMsg('');
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+    setSaving(true);
+    setErrorMsg('');
+    try {
+      await apiClient.put(`/students/${editingStudent.id}`, {
+        fullName: editForm.fullName,
+        email: editForm.email,
+        studentNumber: editForm.studentNumber,
+        departmentId: editForm.departmentId,
+        yearLevel: editingStudent.yearLevel,
+      });
+      await loadStudents();
+      setShowEditModal(false);
+      setEditingStudent(null);
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.message ?? 'Failed to update student.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (student: Student) => {
+    if (!window.confirm('Are you sure? This cannot be undone.')) return;
+    try {
+      await apiClient.delete(`/students/${student.id}`);
+      setStudents((prev) => prev.filter((s) => s.id !== student.id));
+    } catch (err: any) {
+      alert(err.response?.data?.message ?? 'Failed to delete student.');
+    }
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -100,6 +152,7 @@ export const AdminStudents: React.FC = () => {
                   <th style={{ padding: '16px 12px' }}>Full Name</th>
                   <th style={{ padding: '16px 12px' }}>Email Address</th>
                   <th style={{ padding: '16px 12px' }}>Year Level</th>
+                  <th style={{ padding: '16px 12px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,6 +162,12 @@ export const AdminStudents: React.FC = () => {
                     <td style={{ padding: '16px 12px' }}>{s.fullName}</td>
                     <td style={{ padding: '16px 12px' }}>{s.email}</td>
                     <td style={{ padding: '16px 12px' }}>Year {s.yearLevel}</td>
+                    <td style={{ padding: '16px 12px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="glass-btn" style={{ padding: '6px 12px', fontSize: '0.85rem' }} onClick={() => openEdit(s)}>✏️ Edit</button>
+                        <button className="glass-btn" style={{ padding: '6px 12px', fontSize: '0.85rem', borderColor: 'var(--error)', color: 'var(--error)' }} onClick={() => handleDelete(s)}>🗑️ Delete</button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -116,6 +175,48 @@ export const AdminStudents: React.FC = () => {
           )
         }
       </div>
+
+      {/* Edit Student Modal */}
+      {showEditModal && editingStudent && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '460px', padding: '32px', background: '#1e293b' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2>Edit Student</h2>
+              <button className="glass-btn" onClick={() => setShowEditModal(false)}>✕</button>
+            </div>
+            {errorMsg && (
+              <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', color: '#EF4444' }}>
+                ❌ {errorMsg}
+              </div>
+            )}
+            <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input className="form-input" required value={editForm.fullName} onChange={e => setEditForm({ ...editForm, fullName: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input className="form-input" type="email" required value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Student Number</label>
+                <input className="form-input" required value={editForm.studentNumber} onChange={e => setEditForm({ ...editForm, studentNumber: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Department</label>
+                <select className="form-input" style={{ background: 'rgba(15,23,42,0.9)' }} required value={editForm.departmentId} onChange={e => setEditForm({ ...editForm, departmentId: e.target.value })}>
+                  <option value="">— Select Department —</option>
+                  {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button type="button" className="glass-btn" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="submit" className="glass-btn primary" style={{ flex: 1, justifyContent: 'center' }} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Create Student Account Modal */}
       {showModal && (

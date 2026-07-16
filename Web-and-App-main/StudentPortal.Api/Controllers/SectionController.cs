@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudentPortal.Api.Data;
 using StudentPortal.Api.Models.Entities;
+using StudentPortal.Api.Services.Implementations;
 using StudentPortal.Api.Services.Interfaces;
 
 namespace StudentPortal.Api.Controllers;
@@ -46,7 +47,7 @@ public class SectionController : ControllerBase
                 .Include(s => s.Course)
                 .Include(s => s.Instructor)
                 .Include(s => s.Semester)
-                .Where(s => s.InstructorId == instructor.Id)
+                .Where(s => s.InstructorId == instructor.Id && s.IsActive)
                 .Select(s => new
                 {
                     s.Id,
@@ -67,6 +68,103 @@ public class SectionController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("available")]
+    [Authorize(Policy = "StudentOnly")]
+    public async Task<IActionResult> GetAvailableSections()
+    {
+        var keycloakId = GetCurrentKeycloakId();
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.KeycloakId == keycloakId);
+        if (student == null) return Unauthorized();
+
+        var passedCourseCodes = await _context.Results
+            .Include(r => r.Enrollment)
+                .ThenInclude(e => e!.Section)
+                    .ThenInclude(s => s!.Course)
+            .Where(r => r.Enrollment!.StudentId == student.Id
+                     && r.Published
+                     && r.LetterGrade != "F"
+                     && r.LetterGrade != null)
+            .Select(r => r.Enrollment!.Section!.Course!.Code)
+            .Distinct()
+            .ToListAsync();
+
+        var passedSemesterNumbers = await _context.Results
+            .Include(r => r.Enrollment)
+                .ThenInclude(e => e!.Section)
+                    .ThenInclude(s => s!.Course)
+            .Where(r => r.Enrollment!.StudentId == student.Id
+                     && r.Published
+                     && r.LetterGrade != "F"
+                     && r.LetterGrade != null)
+            .Select(r => r.Enrollment!.Section!.Course!.SemesterNumber)
+            .ToListAsync();
+
+        var currentSemesterNumber = passedSemesterNumbers.Count > 0
+            ? Math.Min(passedSemesterNumbers.Max() + 1, 10)
+            : 1;
+
+        var regPeriod = await _context.RegistrationPeriods
+            .Where(p => p.IsOpen)
+            .FirstOrDefaultAsync();
+
+        var sections = await _context.Sections
+            .Include(s => s.Course)
+            .Include(s => s.Instructor)
+            .Include(s => s.Semester)
+            .Include(s => s.Enrollments)
+            .Where(s => s.IsActive)
+            .Select(s => new
+            {
+                id = s.Id,
+                s.ScheduleJson,
+                s.Capacity,
+                courseCode = s.Course!.Code,
+                courseName = s.Course.Name,
+                credits = s.Course.CreditHours,
+                semester = s.Semester!.Name,
+                semesterNumber = s.Course.SemesterNumber,
+                prerequisiteCode = s.Course.PrerequisiteCode,
+                instructorName = s.Instructor != null
+                    ? s.Instructor.FullName : "TBA",
+                enrolledCount = s.Enrollments.Count,
+                alreadyEnrolled = s.Enrollments
+                    .Any(e => e.StudentId == student.Id),
+                enrollmentId = s.Enrollments
+                    .Where(e => e.StudentId == student.Id)
+                    .Select(e => (Guid?)e.Id)
+                    .FirstOrDefault(),
+            })
+            .OrderBy(s => s.semesterNumber)
+            .ToListAsync();
+
+        var sectionsWithPrereq = sections.Select(s => new
+        {
+            s.id,
+            s.ScheduleJson,
+            s.Capacity,
+            s.courseCode,
+            s.courseName,
+            s.credits,
+            s.semester,
+            s.semesterNumber,
+            s.prerequisiteCode,
+            s.instructorName,
+            prerequisiteMet = PrerequisiteHelper.IsPrerequisiteMet(s.prerequisiteCode, passedCourseCodes),
+            s.enrolledCount,
+            s.alreadyEnrolled,
+            s.enrollmentId,
+        }).ToList();
+
+        return Ok(new
+        {
+            sections = sectionsWithPrereq,
+            passedCourses = passedCourseCodes,
+            currentSemesterNumber,
+            registrationOpen = regPeriod != null
+        });
     }
 
     [HttpGet]

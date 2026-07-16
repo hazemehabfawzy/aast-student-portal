@@ -108,8 +108,7 @@ export const InstructorAttendance: React.FC = () => {
           videoRef.current.srcObject = s;
         }
       })
-      .catch((err) => {
-        console.error("Webcam access error:", err);
+      .catch(() => {
         setDetectionMessage("Could not access webcam. Please ensure camera permissions are enabled.");
       });
 
@@ -178,11 +177,9 @@ export const InstructorAttendance: React.FC = () => {
               // Do not reset firstNotRegisteredTime and lastDetectedKey to prevent transient drops from resetting the 5s timer.
             }
           })
-          .catch((err) => {
-            console.error("Face check-in error:", err);
+          .catch(() => {
           });
-      } catch (err) {
-        console.error("Canvas capture error:", err);
+      } catch {
       }
     };
 
@@ -228,8 +225,7 @@ export const InstructorAttendance: React.FC = () => {
         .then((res) => {
           setCode(res.data.currentCode);
         })
-        .catch((err) => {
-          console.error('Failed to rotate session code', err);
+        .catch(() => {
         });
     };
 
@@ -266,8 +262,7 @@ export const InstructorAttendance: React.FC = () => {
           const approve = window.confirm(`🚨 Student ${student.studentName} has missed 3 classes. Do you want to approve their withdrawal? Click OK to withdraw, or Cancel to let it go.`);
           try {
             await apiClient.post(`/sections/${state.sectionId}/enrollments/${student.enrollmentId}/withdrawal-decision`, { approve });
-          } catch (e) {
-            console.error(e);
+          } catch {
           }
         } 
         else if (abs >= 4 && student.isWithdrawn) {
@@ -292,8 +287,7 @@ export const InstructorAttendance: React.FC = () => {
       .then((res) => {
         setRoster(mapRosterResponse(res.data));
       })
-      .catch((err) => {
-        console.error('Failed to load attendance roster', err);
+      .catch(() => {
       })
       .finally(() => {
         setLoadingRoster(false);
@@ -310,8 +304,7 @@ export const InstructorAttendance: React.FC = () => {
         .then((res) => {
           setRoster(mapRosterResponse(res.data));
         })
-        .catch((err) => {
-          console.error('Polling error', err);
+        .catch(() => {
         });
     }, 5000);
 
@@ -350,8 +343,7 @@ export const InstructorAttendance: React.FC = () => {
               setActiveSession(false);
               navigate('/instructor/sections');
             })
-            .catch((err) => {
-              console.error(err);
+            .catch(() => {
               setActiveSession(false);
               navigate('/instructor/sections');
             });
@@ -407,13 +399,25 @@ export const InstructorAttendance: React.FC = () => {
               ) : state.method === 'qr' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                   {code ? (
-                    <div style={{ padding: '16px', background: '#fff', borderRadius: '8px', display: 'inline-block' }}>
-                      <QRCodeSVG
-                        value={code}
-                        size={200}
-                        level="H"
-                      />
-                    </div>
+                    <>
+                      <div style={{ padding: '16px', background: '#fff', borderRadius: '8px', display: 'inline-block' }}>
+                        <QRCodeSVG
+                          value={code}
+                          size={200}
+                          level="H"
+                        />
+                      </div>
+                      <p style={{
+                        fontSize: '2rem',
+                        fontWeight: 'bold',
+                        letterSpacing: '4px',
+                        color: 'var(--accent)',
+                        fontFamily: 'monospace',
+                        margin: '12px 0',
+                      }}>
+                        {code}
+                      </p>
+                    </>
                   ) : (
                     <div style={{ width: '232px', height: '232px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--text-muted)' }}>
                       Generating QR...

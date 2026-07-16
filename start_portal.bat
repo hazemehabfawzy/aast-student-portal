@@ -1,6 +1,6 @@
 @echo off
 echo Starting AAST Student Portal...
-cd /d D:\projects\StudentPortal\Web-and-App-main
+cd /d "%~dp0Web-and-App-main"
 docker compose up -d
 echo Waiting for services to start...
 timeout /t 30 /nobreak

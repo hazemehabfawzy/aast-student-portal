@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../../api/apiClient';
 
-interface Instructor { id: string; fullName: string; keycloakId: string; departmentId: string; departmentName?: string; }
+interface Instructor { id: string; fullName: string; keycloakId?: string; departmentId: string; departmentName?: string; }
 interface Department  { id: string; name: string; }
 
 const emptyForm = { firstName: '', lastName: '', email: '', username: '', password: '', departmentId: '', showPassword: false };
+const emptyEditForm = { fullName: '', departmentId: '' };
 
 export const AdminInstructors: React.FC = () => {
   const [instructors, setInstructors]   = useState<Instructor[]>([]);
@@ -12,19 +13,25 @@ export const AdminInstructors: React.FC = () => {
   const [loading, setLoading]           = useState(true);
   const [search, setSearch]             = useState('');
   const [showModal, setShowModal]       = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingInstructor, setEditingInstructor] = useState<Instructor | null>(null);
+  const [editForm, setEditForm]         = useState(emptyEditForm);
   const [form, setForm]                 = useState(emptyForm);
   const [creating, setCreating]         = useState(false);
+  const [saving, setSaving]             = useState(false);
   const [successMsg, setSuccessMsg]     = useState('');
   const [errorMsg, setErrorMsg]         = useState('');
 
+  const loadInstructors = () =>
+    apiClient.get<Instructor[]>('/admin/instructors').then((res) => setInstructors(res.data));
+
   useEffect(() => {
     Promise.all([
-      apiClient.get<Instructor[]>('/admin/instructors'),
+      loadInstructors(),
       apiClient.get<Department[]>('/departments'),
-    ]).then(([iRes, dRes]) => {
-      setInstructors(iRes.data);
+    ]).then(([, dRes]) => {
       setDepartments(dRes.data);
-    }).catch(err => console.error('Failed to load', err))
+    }).catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
@@ -36,6 +43,46 @@ export const AdminInstructors: React.FC = () => {
     const updated = { ...form, [field]: value };
     const autoUser = `${updated.firstName.toLowerCase()}.${updated.lastName.toLowerCase()}`.replace(/\s+/g, '');
     setForm({ ...updated, username: autoUser });
+  };
+
+  const openEdit = (instructor: Instructor) => {
+    setEditingInstructor(instructor);
+    setEditForm({
+      fullName: instructor.fullName,
+      departmentId: instructor.departmentId,
+    });
+    setErrorMsg('');
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingInstructor) return;
+    setSaving(true);
+    setErrorMsg('');
+    try {
+      await apiClient.put(`/instructors/${editingInstructor.id}`, {
+        fullName: editForm.fullName,
+        departmentId: editForm.departmentId,
+      });
+      await loadInstructors();
+      setShowEditModal(false);
+      setEditingInstructor(null);
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.message ?? 'Failed to update instructor.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (instructor: Instructor) => {
+    if (!window.confirm('Are you sure? This cannot be undone.')) return;
+    try {
+      await apiClient.delete(`/instructors/${instructor.id}`);
+      setInstructors((prev) => prev.filter((i) => i.id !== instructor.id));
+    } catch (err: any) {
+      alert(err.response?.data?.message ?? 'Failed to delete instructor.');
+    }
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -81,6 +128,7 @@ export const AdminInstructors: React.FC = () => {
                   <th style={{ padding: '16px 12px' }}>Full Name</th>
                   <th style={{ padding: '16px 12px' }}>Department</th>
                   <th style={{ padding: '16px 12px' }}>Keycloak ID</th>
+                  <th style={{ padding: '16px 12px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -88,7 +136,13 @@ export const AdminInstructors: React.FC = () => {
                   <tr key={i.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                     <td style={{ padding: '16px 12px', fontWeight: 'bold' }}>{i.fullName}</td>
                     <td style={{ padding: '16px 12px' }}>{i.departmentName ?? departments.find(d => d.id === i.departmentId)?.name ?? 'N/A'}</td>
-                    <td style={{ padding: '16px 12px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{i.keycloakId}</td>
+                    <td style={{ padding: '16px 12px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{i.keycloakId ?? '—'}</td>
+                    <td style={{ padding: '16px 12px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="glass-btn" style={{ padding: '6px 12px', fontSize: '0.85rem' }} onClick={() => openEdit(i)}>✏️ Edit</button>
+                        <button className="glass-btn" style={{ padding: '6px 12px', fontSize: '0.85rem', borderColor: 'var(--error)', color: 'var(--error)' }} onClick={() => handleDelete(i)}>🗑️ Delete</button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -96,6 +150,40 @@ export const AdminInstructors: React.FC = () => {
           )
         }
       </div>
+
+      {/* Edit Instructor Modal */}
+      {showEditModal && editingInstructor && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', padding: '32px', background: '#1e293b' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2>Edit Instructor</h2>
+              <button className="glass-btn" onClick={() => setShowEditModal(false)}>✕</button>
+            </div>
+            {errorMsg && (
+              <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid #EF4444', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', color: '#EF4444' }}>
+                ❌ {errorMsg}
+              </div>
+            )}
+            <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input className="form-input" required value={editForm.fullName} onChange={e => setEditForm({ ...editForm, fullName: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Department</label>
+                <select className="form-input" style={{ background: 'rgba(15,23,42,0.9)' }} required value={editForm.departmentId} onChange={e => setEditForm({ ...editForm, departmentId: e.target.value })}>
+                  <option value="">— Select Department —</option>
+                  {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button type="button" className="glass-btn" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="submit" className="glass-btn primary" style={{ flex: 1, justifyContent: 'center' }} disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Create Instructor Account Modal */}
       {showModal && (

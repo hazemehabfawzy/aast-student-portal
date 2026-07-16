@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/profile_screen.dart';
@@ -7,9 +9,33 @@ import 'screens/results_screen.dart';
 import 'screens/attendance_screen.dart';
 import 'screens/schedule_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'screens/chat_screen.dart';
+import 'firebase_options.dart';
+import 'config.dart';
 // assignments_screen.dart intentionally omitted (backend endpoint not yet in primary API)
 
-void main() {
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  debugPrint('BGMessage: ${message.notification?.title}');
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await AppConfig.init();
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(
+      const Duration(seconds: 10),
+      onTimeout: () => Firebase.app(),
+    );
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  } catch (e) {
+    debugPrint('Firebase init skipped: $e');
+  }
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => AuthService(),
@@ -76,6 +102,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     AttendanceScreen(),
     ScheduleScreen(),
     NotificationsScreen(),
+    ChatScreen(),
   ];
 
   @override
@@ -121,6 +148,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             icon: Icon(Icons.notifications_outlined),
             activeIcon: Icon(Icons.notifications),
             label: 'Alerts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_outlined),
+            activeIcon: Icon(Icons.chat),
+            label: 'Chat',
           ),
         ],
       ),

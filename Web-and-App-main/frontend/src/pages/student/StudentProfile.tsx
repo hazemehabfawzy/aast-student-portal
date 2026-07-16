@@ -13,15 +13,14 @@ interface StudentResult {
 export const StudentProfile: React.FC = () => {
   const { fullName, email, username } = useAuth();
   const [results, setResults] = useState<StudentResult[]>([]);
+  const [cumulativeGpa, setCumulativeGpa] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiClient.get<{ results: StudentResult[] }>('/students/me/results')
+    apiClient.get<{ results: StudentResult[]; cumulativeGpa: number }>('/students/me/results')
       .then((res) => {
         setResults(res.data.results);
-      })
-      .catch((err) => {
-        console.error('Failed to load profile academic data', err);
+        setCumulativeGpa(res.data.cumulativeGpa ?? null);
       })
       .finally(() => {
         setLoading(false);
@@ -29,29 +28,7 @@ export const StudentProfile: React.FC = () => {
   }, []);
 
   const totalCredits = results.reduce((acc, r) => acc + r.creditHours, 0);
-  
-  // Calculate a simple GPA from letter grades
-  const getGradePoints = (grade?: string): number => {
-    if (!grade) return 0;
-    switch (grade.toUpperCase()) {
-      case 'A+': case 'A': return 4.0;
-      case 'A-': return 3.7;
-      case 'B+': return 3.3;
-      case 'B': return 3.0;
-      case 'B-': return 2.7;
-      case 'C+': return 2.3;
-      case 'C': return 2.0;
-      case 'C-': return 1.7;
-      case 'D+': return 1.3;
-      case 'D': return 1.0;
-      default: return 0.0;
-    }
-  };
-
-  const gradedCourses = results.filter(r => r.letterGrade);
-  const totalGradePoints = gradedCourses.reduce((acc, r) => acc + (getGradePoints(r.letterGrade) * r.creditHours), 0);
-  const totalGradedCredits = gradedCourses.reduce((acc, r) => acc + r.creditHours, 0);
-  const gpa = totalGradedCredits > 0 ? (totalGradePoints / totalGradedCredits).toFixed(2) : 'N/A';
+  const gpa = cumulativeGpa !== null ? cumulativeGpa.toFixed(2) : 'N/A';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -93,7 +70,7 @@ export const StudentProfile: React.FC = () => {
               <span style={{ fontWeight: 600 }}>{loading ? '...' : totalCredits} Credits</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Estimated Cumulative GPA:</span>
+              <span style={{ color: 'var(--text-muted)' }}>Cumulative GPA:</span>
               <span style={{ fontWeight: 600, color: 'var(--success)' }}>{loading ? '...' : gpa}</span>
             </div>
           </div>

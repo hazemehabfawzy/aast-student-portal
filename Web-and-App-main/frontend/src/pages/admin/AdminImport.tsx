@@ -55,7 +55,6 @@ export const AdminImport: React.FC = () => {
         setFile(null);
       })
       .catch((err) => {
-        console.error(err);
         setErrorMessage(err.response?.data?.message || 'File upload failed. Please ensure the file formatting is correct.');
       })
       .finally(() => {

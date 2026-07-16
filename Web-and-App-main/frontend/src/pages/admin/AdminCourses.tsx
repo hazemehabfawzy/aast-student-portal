@@ -33,8 +33,7 @@ export const AdminCourses: React.FC = () => {
       .then((res) => {
         setCourses(res.data);
       })
-      .catch((err) => {
-        console.error(err);
+      .catch(() => {
         setError('Failed to load courses.');
       })
       .finally(() => setLoading(false));
@@ -45,8 +44,7 @@ export const AdminCourses: React.FC = () => {
       .then((res) => {
         setDepartments(res.data);
       })
-      .catch((err) => {
-        console.error('Failed to load departments', err);
+      .catch(() => {
       });
   };
 

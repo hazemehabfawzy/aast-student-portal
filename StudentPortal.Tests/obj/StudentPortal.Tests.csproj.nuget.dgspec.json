@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Tests\\StudentPortal.Tests.csproj": {}
+    "D:\\projects\\StudentPortal\\StudentPortal.Tests\\StudentPortal.Tests.csproj": {}
   },
   "projects": {
-    "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Api\\StudentPortal.Api.csproj": {
+    "D:\\projects\\StudentPortal\\StudentPortal.Api\\StudentPortal.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Api\\StudentPortal.Api.csproj",
+        "projectUniqueName": "D:\\projects\\StudentPortal\\StudentPortal.Api\\StudentPortal.Api.csproj",
         "projectName": "StudentPortal.Api",
-        "projectPath": "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Api\\StudentPortal.Api.csproj",
+        "projectPath": "D:\\projects\\StudentPortal\\StudentPortal.Api\\StudentPortal.Api.csproj",
         "packagesPath": "C:\\Users\\Hazem\\.nuget\\packages\\",
-        "outputPath": "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Api\\obj\\",
+        "outputPath": "D:\\projects\\StudentPortal\\StudentPortal.Api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Hazem\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -116,14 +116,14 @@
         }
       }
     },
-    "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Tests\\StudentPortal.Tests.csproj": {
+    "D:\\projects\\StudentPortal\\StudentPortal.Tests\\StudentPortal.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Tests\\StudentPortal.Tests.csproj",
+        "projectUniqueName": "D:\\projects\\StudentPortal\\StudentPortal.Tests\\StudentPortal.Tests.csproj",
         "projectName": "StudentPortal.Tests",
-        "projectPath": "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Tests\\StudentPortal.Tests.csproj",
+        "projectPath": "D:\\projects\\StudentPortal\\StudentPortal.Tests\\StudentPortal.Tests.csproj",
         "packagesPath": "C:\\Users\\Hazem\\.nuget\\packages\\",
-        "outputPath": "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Tests\\obj\\",
+        "outputPath": "D:\\projects\\StudentPortal\\StudentPortal.Tests\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Hazem\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -138,8 +138,8 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Api\\StudentPortal.Api.csproj": {
-                "projectPath": "D:\\projects\\StudentPortal\\Web-and-App-main\\StudentPortal.Api\\StudentPortal.Api.csproj"
+              "D:\\projects\\StudentPortal\\StudentPortal.Api\\StudentPortal.Api.csproj": {
+                "projectPath": "D:\\projects\\StudentPortal\\StudentPortal.Api\\StudentPortal.Api.csproj"
               }
             }
           }
@@ -167,6 +167,10 @@
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
               "version": "[17.14.1, )"
+            },
+            "SQLitePCLRaw.bundle_e_sqlite3": {
+              "target": "Package",
+              "version": "[2.1.10, )"
             },
             "coverlet.collector": {
               "target": "Package",

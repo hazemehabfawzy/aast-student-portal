@@ -86,7 +86,7 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
                             ElevatedButton.icon(
                               onPressed: () {
                                 Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => ChatScreen(doctorName: '$title $name')),
+                                  MaterialPageRoute(builder: (_) => const ChatScreen()),
                                 );
                               },
                               icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),

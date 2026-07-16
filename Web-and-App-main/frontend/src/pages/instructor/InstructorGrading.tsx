@@ -21,6 +21,16 @@ interface StudentGrade {
   published: boolean;
 }
 
+interface AtRiskStudent {
+  studentName: string;
+  studentNumber: string;
+  week7Score: number;
+  week12Score: number;
+  prefinalScore: number;
+  predictedFinal: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+}
+
 export const InstructorGrading: React.FC = () => {
   const location = useLocation();
   const state = (location.state as { sectionId?: string; sectionCode?: string; sectionName?: string }) || {};
@@ -28,6 +38,8 @@ export const InstructorGrading: React.FC = () => {
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string>(state.sectionId || '');
   const [grades, setGrades] = useState<StudentGrade[]>([]);
+  const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([]);
+  const [atRiskCollapsed, setAtRiskCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
 
@@ -47,13 +59,15 @@ export const InstructorGrading: React.FC = () => {
           setSelectedSectionId(res.data[0].id);
         }
       })
-      .catch((err) => console.error('Failed to load instructor sections', err));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     if (!selectedSectionId) return;
 
     setLoading(true);
+    setAtRiskStudents([]);
+
     apiClient.get<StudentGrade[]>(`/sections/${selectedSectionId}/results`)
       .then((res) => {
         setGrades(res.data);
@@ -68,8 +82,13 @@ export const InstructorGrading: React.FC = () => {
         });
         setEditScores(initialEdit);
       })
-      .catch((err) => console.error('Failed to load grades', err))
+      .catch(() => {})
       .finally(() => setLoading(false));
+
+    // Load at-risk students in parallel
+    apiClient.get<AtRiskStudent[]>(`/sections/${selectedSectionId}/at-risk`)
+      .then((res) => setAtRiskStudents(res.data))
+      .catch(() => setAtRiskStudents([]));
   }, [selectedSectionId]);
 
   const handleScoreChange = (enrollmentId: string, field: string, value: string) => {
@@ -172,6 +191,46 @@ export const InstructorGrading: React.FC = () => {
         </div>
       </div>
 
+      {atRiskStudents.length > 0 && (
+        <div style={{
+          background: 'rgba(239,68,68,0.1)',
+          border: '1px solid #EF4444',
+          borderRadius: '8px',
+          padding: '12px 16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+               onClick={() => setAtRiskCollapsed(c => !c)}>
+            <strong style={{ color: '#EF4444' }}>
+              ⚠ {atRiskStudents.length} student(s) at risk of failing Final exam
+            </strong>
+            <span style={{ color: '#EF4444', fontSize: '12px' }}>
+              {atRiskCollapsed ? '▼ Show' : '▲ Hide'}
+            </span>
+          </div>
+          {!atRiskCollapsed && (
+            <ul style={{ marginTop: '8px', color: '#CBD5E1', fontSize: '13px', paddingLeft: '16px' }}>
+              {atRiskStudents.map(s => (
+                <li key={s.studentNumber} style={{ marginBottom: '4px' }}>
+                  <strong style={{ color: '#FCA5A5' }}>{s.studentName}</strong>
+                  {' '}({s.studentNumber}) — Predicted Final: {s.predictedFinal}/40
+                  <span style={{
+                    marginLeft: '8px',
+                    padding: '1px 6px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    background: s.riskLevel === 'HIGH' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)',
+                    color: s.riskLevel === 'HIGH' ? '#FCA5A5' : '#FCD34D'
+                  }}>
+                    {s.riskLevel} RISK
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {selectedSectionId === '' ? (
         <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
           Please select a section from the dropdown list to view student lists.
@@ -187,9 +246,9 @@ export const InstructorGrading: React.FC = () => {
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                   <th style={{ padding: '12px' }}>Student</th>
-                  <th style={{ padding: '12px', width: '100px' }}>Week 7 / 30</th>
-                  <th style={{ padding: '12px', width: '100px' }}>Week 12 / 20</th>
-                  <th style={{ padding: '12px', width: '100px' }}>Prefinal / 10</th>
+                  <th style={{ padding: '12px', width: '100px' }}>7th / 30</th>
+                  <th style={{ padding: '12px', width: '100px' }}>12th / 20</th>
+                  <th style={{ padding: '12px', width: '100px' }}>C.Work / 10</th>
                   <th style={{ padding: '12px', width: '100px' }}>Final / 40</th>
                   <th style={{ padding: '12px', width: '95px' }}>Total / 100</th>
                   <th style={{ padding: '12px', width: '80px' }}>Grade</th>

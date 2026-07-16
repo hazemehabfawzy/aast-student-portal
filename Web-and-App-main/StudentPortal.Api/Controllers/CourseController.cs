@@ -25,6 +25,7 @@ public class CourseController : ControllerBase
     public async Task<IActionResult> GetAllCourses()
     {
         var courses = await _context.Courses
+            .Where(c => c.IsActive)
             .Include(c => c.Department)
             .ToListAsync();
         return Ok(courses);

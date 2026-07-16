@@ -76,6 +76,35 @@ public class InstructorController : ControllerBase
             message = $"Login: {dto.Username} / {dto.Password}"
         });
     }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateInstructor(Guid id, [FromBody] UpdateInstructorDto dto)
+    {
+        var instructor = await _context.Instructors.FindAsync(id);
+        if (instructor == null) return NotFound();
+        if (dto.FullName != null) instructor.FullName = dto.FullName;
+        if (dto.DepartmentId.HasValue && dto.DepartmentId.Value != Guid.Empty)
+            instructor.DepartmentId = dto.DepartmentId.Value;
+        await _context.SaveChangesAsync();
+        return Ok(instructor);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteInstructor(Guid id)
+    {
+        var instructor = await _context.Instructors.FindAsync(id);
+        if (instructor == null) return NotFound();
+        _context.Instructors.Remove(instructor);
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Instructor deleted" });
+    }
+}
+
+public class UpdateInstructorDto
+{
+    public string? FullName { get; set; }
+    public string? Email { get; set; }
+    public Guid? DepartmentId { get; set; }
 }
 
 public class CreateInstructorAccountDto

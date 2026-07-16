@@ -4,6 +4,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Api.Models.DTOs.Requests;
+using StudentPortal.Api.Models.Entities;
 using StudentPortal.Api.Services.Implementations;
 using StudentPortal.Api.Services.Interfaces;
 
@@ -222,9 +223,10 @@ public class AttendanceController : ControllerBase
                     .ThenInclude(sec => sec!.Course)
                 .Where(s => enrollments.Contains(s.SectionId) && now >= s.StartTime && now <= s.EndTime)
                 .Select(s => new {
-                    sessionId = s.Id,
+                    sessionId  = s.Id,
                     courseCode = s.Section!.Course!.Code,
-                    courseName = s.Section.Course.Name
+                    courseName = s.Section.Course.Name,
+                    method     = s.Method
                 })
                 .ToListAsync();
 
@@ -234,5 +236,40 @@ public class AttendanceController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpPost("attendance/check-in/face")]
+    [Authorize(Policy = "StudentOnly")]
+    public async Task<IActionResult> FaceStudentCheckIn([FromBody] FaceCheckInDto dto)
+    {
+        if (!Request.Headers.TryGetValue("X-Client-Platform", out var platform) || platform.ToString() != "mobile")
+            return StatusCode(403, new { message = "Face check-in is only available from the mobile app." });
+
+        var keycloakId = GetCurrentKeycloakId();
+        var student = await _context.Students.FirstOrDefaultAsync(s => s.KeycloakId == keycloakId);
+        if (student == null) return Unauthorized(new { message = "Student record not found." });
+
+        try
+        {
+            var result = await _attendanceService.FaceStudentCheckInAsync(student.Id, dto.SessionId, dto.Image);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)    { return NotFound(new { message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { message = ex.Message }); }
+        catch (Exception ex)               { return BadRequest(new { message = ex.Message }); }
+    }
+
+    [HttpPost("attendance/sessions/{sessionId:guid}/face-checkin")]
+    [Authorize(Policy = "InstructorOnly")]
+    public async Task<IActionResult> InstructorFaceCheckIn(Guid sessionId, [FromBody] FaceCheckInDto dto)
+    {
+        try
+        {
+            var result = await _attendanceService.FaceCheckInAsync(sessionId, dto.Image);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)    { return NotFound(new { message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { message = ex.Message }); }
+        catch (Exception ex)               { return BadRequest(new { message = ex.Message }); }
     }
 }

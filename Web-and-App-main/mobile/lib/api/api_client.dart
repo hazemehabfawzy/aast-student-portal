@@ -3,8 +3,14 @@ import 'package:http/http.dart' as http;
 import '../config.dart';
 
 class ApiClient {
+  static final ApiClient instance = ApiClient._();
+  ApiClient._();
+
   static String baseUrl = AppConfig.apiBaseUrl;
   static String? token;
+
+  void setToken(String value) => token = value;
+  void clearToken() => token = null;
 
   static Map<String, String> get _headers => {
     'Content-Type': 'application/json',

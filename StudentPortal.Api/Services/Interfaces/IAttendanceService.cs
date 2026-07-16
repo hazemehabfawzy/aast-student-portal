@@ -11,4 +11,6 @@ public interface IAttendanceService
     Task CloseSessionAsync(string instructorKeycloakId, Guid sessionId);
     Task<object> GetSectionAttendanceAsync(string instructorKeycloakId, Guid sectionId);
     Task<object> GetStudentMeAttendanceAsync(string studentKeycloakId);
+    Task<List<object>> FaceCheckInAsync(Guid sessionId, string imageBase64);
+    Task<object> FaceStudentCheckInAsync(Guid studentId, string? sessionId, string imageBase64);
 }

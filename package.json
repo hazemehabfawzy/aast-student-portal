@@ -1,0 +1,24 @@
+{
+  "name": "studentportal",
+  "version": "1.0.0",
+  "description": "A graduation project for the Arab Academy for Science, Technology and Maritime Transport (AAST) — Computer Engineering Department.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hazemehabfawzy/aast-student-portal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/hazemehabfawzy/aast-student-portal/issues"
+  },
+  "homepage": "https://github.com/hazemehabfawzy/aast-student-portal#readme",
+  "dependencies": {
+    "playwright": "^1.61.1"
+  }
+}

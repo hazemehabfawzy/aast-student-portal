@@ -111,7 +111,7 @@ export const AdminSections: React.FC = () => {
       setSemesters(semRes.data);
       const cur = semRes.data.find(s => s.isCurrent) ?? semRes.data[0];
       if (cur) setSemesterId(cur.id);
-    } catch (err) { console.error('Failed to load sections data', err); }
+    } catch {}
     finally { setLoading(false); }
   };
 
@@ -169,7 +169,7 @@ export const AdminSections: React.FC = () => {
       ]);
       setEnrolledStudents(enrolledRes.data);
       setAllStudents(allRes.data);
-    } catch (err) { console.error(err); }
+    } catch {}
   };
 
   const handleEnroll = async (studentId: string) => {

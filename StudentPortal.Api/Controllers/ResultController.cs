@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentPortal.Api.Models.DTOs.Requests;
+using StudentPortal.Api.Services.Implementations;
 using StudentPortal.Api.Services.Interfaces;
 
 namespace StudentPortal.Api.Controllers;
@@ -11,10 +12,12 @@ namespace StudentPortal.Api.Controllers;
 public class ResultController : ControllerBase
 {
     private readonly IResultService _resultService;
+    private readonly GradePredictionClient _prediction;
 
-    public ResultController(IResultService resultService)
+    public ResultController(IResultService resultService, GradePredictionClient prediction)
     {
         _resultService = resultService;
+        _prediction    = prediction;
     }
 
     private string GetCurrentKeycloakId()
@@ -164,6 +167,30 @@ public class ResultController : ControllerBase
             var keycloakId = GetCurrentKeycloakId();
             await _resultService.PublishSectionResultsAsync(keycloakId, sectionId);
             return Ok(new { message = "Section results published successfully." });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("sections/{sectionId:guid}/at-risk")]
+    [Authorize(Policy = "InstructorOnly")]
+    public async Task<IActionResult> GetAtRiskStudents(Guid sectionId)
+    {
+        try
+        {
+            var keycloakId = GetCurrentKeycloakId();
+            var atRisk = await _resultService.GetAtRiskStudentsAsync(keycloakId, sectionId, _prediction);
+            return Ok(atRisk);
         }
         catch (UnauthorizedAccessException ex)
         {

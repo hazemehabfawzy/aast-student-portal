@@ -44,14 +44,7 @@ public static class KeycloakAuthExtensions
             // so disable audience validation. Issuer + signature validation is sufficient.
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuer = true,
-                // Accept tokens issued to either the container-internal URL or localhost URL
-                ValidIssuers = new[]
-                {
-                    authority,
-                    "http://localhost:8080/realms/student-portal",
-                    "http://10.0.2.2:8080/realms/student-portal"
-                },
+                ValidateIssuer = false,
                 ValidateAudience = false,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,

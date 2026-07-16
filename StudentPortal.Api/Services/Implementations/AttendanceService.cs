@@ -17,14 +17,16 @@ public class AttendanceService : IAttendanceService
 {
     private readonly AppDbContext _context;
     private readonly IGeofenceService _geofenceService;
+    private readonly FaceRecognitionClient _faceClient;
 
     // Thread-safe in-memory store for failed attempts: (StudentId, SessionId) -> List of timestamps of failures
     private static readonly ConcurrentDictionary<(Guid StudentId, Guid SessionId), List<DateTime>> _failedAttempts = new();
 
-    public AttendanceService(AppDbContext context, IGeofenceService geofenceService)
+    public AttendanceService(AppDbContext context, IGeofenceService geofenceService, FaceRecognitionClient faceClient)
     {
         _context = context;
         _geofenceService = geofenceService;
+        _faceClient = faceClient;
     }
 
     public async Task<SessionResponse> CreateSessionAsync(string instructorKeycloakId, CreateSessionRequest request)
@@ -366,5 +368,104 @@ public class AttendanceService : IAttendanceService
         }
 
         return summaries;
+    }
+
+    public async Task<List<object>> FaceCheckInAsync(Guid sessionId, string imageBase64)
+    {
+        var session = await _context.AttendanceSessions.FindAsync(sessionId);
+        if (session == null) throw new KeyNotFoundException("Session not found.");
+        if (DateTime.UtcNow > session.EndTime) throw new InvalidOperationException("Session is closed.");
+
+        var faceResult = await _faceClient.RecognizeAsync(imageBase64);
+        if (faceResult == null || faceResult.Matches.Count == 0)
+            return new List<object> { new { status = "no_face", name = (string?)null, studentKey = (string?)null } };
+
+        var results = new List<object>();
+        foreach (var match in faceResult.Matches)
+        {
+            var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentNumber == match.StudentKey);
+            if (student == null)
+            {
+                results.Add(new { status = "not_registered", name = match.StudentKey, studentKey = match.StudentKey });
+                continue;
+            }
+
+            var isEnrolled = await _context.Enrollments.AnyAsync(e => e.StudentId == student.Id && e.SectionId == session.SectionId);
+            if (!isEnrolled)
+            {
+                results.Add(new { status = "not_registered", name = student.FullName, studentKey = match.StudentKey });
+                continue;
+            }
+
+            var alreadyIn = await _context.AttendanceRecords.AnyAsync(r => r.SessionId == session.Id && r.StudentId == student.Id);
+            if (alreadyIn)
+            {
+                results.Add(new { status = "already_checked_in", name = student.FullName, studentKey = match.StudentKey });
+                continue;
+            }
+
+            var record = new AttendanceRecord
+            {
+                Id          = Guid.NewGuid(),
+                SessionId   = session.Id,
+                StudentId   = student.Id,
+                CheckedInAt = DateTime.UtcNow,
+                Status      = "present"
+            };
+            await _context.AttendanceRecords.AddAsync(record);
+            await _context.SaveChangesAsync();
+            results.Add(new { status = "success", name = student.FullName, studentKey = match.StudentKey });
+        }
+        return results;
+    }
+
+    public async Task<object> FaceStudentCheckInAsync(Guid studentId, string? sessionId, string imageBase64)
+    {
+        var student = await _context.Students.FindAsync(studentId);
+        if (student == null) throw new UnauthorizedAccessException("Student not found.");
+
+        AttendanceSession? session = null;
+        if (sessionId != null && Guid.TryParse(sessionId, out var sid))
+            session = await _context.AttendanceSessions.FindAsync(sid);
+
+        if (session == null)
+        {
+            var enrolledSections = await _context.Enrollments
+                .Where(e => e.StudentId == studentId)
+                .Select(e => e.SectionId)
+                .ToListAsync();
+
+            var now = DateTime.UtcNow;
+            session = await _context.AttendanceSessions.FirstOrDefaultAsync(s =>
+                enrolledSections.Contains(s.SectionId) &&
+                s.Method == "face" &&
+                now >= s.StartTime && now <= s.EndTime);
+        }
+
+        if (session == null) throw new KeyNotFoundException("No active face session found for your enrolled courses.");
+        if (DateTime.UtcNow > session.EndTime) throw new InvalidOperationException("Session is closed.");
+
+        var alreadyIn = await _context.AttendanceRecords.AnyAsync(r => r.SessionId == session.Id && r.StudentId == studentId);
+        if (alreadyIn) return new { status = "already_checked_in", message = "You have already checked in for this session." };
+
+        var faceResult = await _faceClient.RecognizeAsync(imageBase64);
+        if (faceResult == null || faceResult.Matches.Count == 0)
+            return new { status = "no_face", message = "No face detected. Please ensure good lighting and try again." };
+
+        var topMatch = faceResult.Matches.First();
+        if (!string.Equals(topMatch.StudentKey, student.StudentNumber, StringComparison.OrdinalIgnoreCase))
+            return new { status = "not_recognized", message = "Face does not match your registered profile. Please try again." };
+
+        var record = new AttendanceRecord
+        {
+            Id          = Guid.NewGuid(),
+            SessionId   = session.Id,
+            StudentId   = studentId,
+            CheckedInAt = DateTime.UtcNow,
+            Status      = "present"
+        };
+        await _context.AttendanceRecords.AddAsync(record);
+        await _context.SaveChangesAsync();
+        return new { status = "success", message = "Face recognized — Checked in successfully!" };
     }
 }

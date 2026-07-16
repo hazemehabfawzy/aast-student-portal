@@ -8,7 +8,6 @@ interface Section {
   courseName: string;
   scheduleJson: string;
   capacity: number;
-  hasFaceAttendance?: boolean;
 }
 
 export const InstructorSections: React.FC = () => {
@@ -31,10 +30,12 @@ export const InstructorSections: React.FC = () => {
   useEffect(() => {
     apiClient.get<Section[]>('/instructor/sections')
       .then((res) => {
-        setSections(res.data);
+        const unique = (res.data || []).filter(
+          (s, index, self) => index === self.findIndex((t) => t.id === s.id)
+        );
+        setSections(unique);
       })
-      .catch((err) => {
-        console.error(err);
+      .catch(() => {
         setError('Failed to load instructor sections.');
       })
       .finally(() => {

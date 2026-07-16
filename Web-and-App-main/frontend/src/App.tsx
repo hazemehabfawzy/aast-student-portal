@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { AppLayout } from './pages/AppLayout';
@@ -11,12 +11,14 @@ import { StudentResults } from './pages/student/StudentResults';
 import { StudentSchedule } from './pages/student/StudentSchedule';
 import { StudentRegister } from './pages/student/StudentRegister';
 import { StudentNotifications } from './pages/student/StudentNotifications';
+import { StudentChat } from './pages/ChatPage';
 // import { StudentAssignments } from './pages/student/StudentAssignments'; // disabled until primary API has assignments
 
 // Instructor Pages
 import { InstructorSections } from './pages/instructor/InstructorSections';
 import { InstructorAttendance } from './pages/instructor/InstructorAttendance';
 import { InstructorGrading } from './pages/instructor/InstructorGrading';
+import { InstructorChat } from './pages/ChatPage';
 // import { InstructorAssignments } from './pages/instructor/InstructorAssignments'; // disabled until primary API has assignments
 
 // Admin Pages
@@ -44,7 +46,6 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
@@ -58,6 +59,7 @@ function App() {
             <Route path="/student/schedule" element={<StudentSchedule />} />
             <Route path="/student/register" element={<StudentRegister />} />
             <Route path="/student/notifications" element={<StudentNotifications />} />
+            <Route path="/student/chat" element={<StudentChat />} />
             {/* <Route path="/student/assignments" element={<StudentAssignments />} /> */}
           </Route>
         </Route>
@@ -68,6 +70,7 @@ function App() {
             <Route path="/instructor/sections" element={<InstructorSections />} />
             <Route path="/instructor/attendance" element={<InstructorAttendance />} />
             <Route path="/instructor/grading" element={<InstructorGrading />} />
+            <Route path="/instructor/chat" element={<InstructorChat />} />
             {/* <Route path="/instructor/assignments" element={<InstructorAssignments />} /> */}
           </Route>
         </Route>
@@ -88,7 +91,6 @@ function App() {
         {/* Fallback Redirection */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-    </BrowserRouter>
   );
 }
 

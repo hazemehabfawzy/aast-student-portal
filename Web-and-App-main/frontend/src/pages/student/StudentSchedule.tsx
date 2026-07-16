@@ -83,8 +83,7 @@ export const StudentSchedule: React.FC = () => {
                 });
               });
             }
-          } catch (e) {
-            console.error('Failed to parse schedule JSON for section', sec.sectionId, e);
+          } catch {
           }
         });
 
@@ -96,8 +95,7 @@ export const StudentSchedule: React.FC = () => {
 
         setScheduleItems(items);
       })
-      .catch((err) => {
-        console.error(err);
+      .catch(() => {
         setError('Unable to load class schedule. Please make sure registration is open and you are enrolled.');
       })
       .finally(() => {

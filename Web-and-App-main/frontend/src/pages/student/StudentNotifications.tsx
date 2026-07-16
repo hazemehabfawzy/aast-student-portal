@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import apiClient from '../../api/apiClient';
 
 interface NotificationItem {
-  id: number;
-  type: string; // result, attendance_warning, general
+  id: string;
+  type: string; // result, attendance_warning, general, chat
   title: string;
   body: string;
   isRead: boolean;
@@ -21,8 +21,7 @@ export const StudentNotifications: React.FC = () => {
         const sorted = res.data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setNotifications(sorted);
       })
-      .catch((err) => {
-        console.error('Failed to fetch notifications', err);
+      .catch(() => {
       })
       .finally(() => {
         setLoading(false);
@@ -33,13 +32,12 @@ export const StudentNotifications: React.FC = () => {
     fetchNotifications();
   }, []);
 
-  const handleMarkAsRead = (id: number) => {
+  const handleMarkAsRead = (id: string) => {
     apiClient.put(`/notifications/${id}/read`)
       .then(() => {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
       })
-      .catch((err) => {
-        console.error('Failed to mark notification as read', err);
+      .catch(() => {
       });
   };
 
@@ -47,6 +45,7 @@ export const StudentNotifications: React.FC = () => {
     switch (type) {
       case 'result': return '📊';
       case 'attendance_warning': return '⚠️';
+      case 'chat': return '💬';
       default: return '🔔';
     }
   };

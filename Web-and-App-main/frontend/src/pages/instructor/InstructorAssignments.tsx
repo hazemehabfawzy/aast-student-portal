@@ -15,8 +15,7 @@ export const InstructorAssignments: React.FC = () => {
     try {
       const res = await apiClient.get('/assignments');
       setAssignments(res.data || []);
-    } catch (e) {
-      console.error(e);
+    } catch {
     } finally { setLoading(false); }
   }
 
@@ -31,8 +30,7 @@ export const InstructorAssignments: React.FC = () => {
       await apiClient.post(`/assignments/${assignmentId}/attachments`, formData);
       setSelectedFiles((prev) => ({ ...prev, [assignmentId]: null }));
       await load();
-    } catch (e) {
-      console.error(e);
+    } catch {
     }
   }
 
@@ -41,7 +39,7 @@ export const InstructorAssignments: React.FC = () => {
       await apiClient.post('/assignments', { title, body });
       setTitle(''); setBody('');
       await load();
-    } catch (e) { console.error(e); }
+    } catch {}
   }
 
   return (

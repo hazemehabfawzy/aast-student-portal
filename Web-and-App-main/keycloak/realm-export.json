@@ -39,6 +39,38 @@
       "directAccessGrantsEnabled": true,
       "redirectUris": [
         "com.studentportal.app:/oauth2redirect",
+        "com.studentportal.app://oauth2redirect",
+        "com.studentportal.app://oauth-callback",
+        "http://localhost:*"
+      ],
+      "webOrigins": ["+"],
+      "protocolMappers": [
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ],
+      "attributes": { "pkce.code.challenge.method": "S256" }
+    },
+    {
+      "clientId": "flutter-mobile-app",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "com.studentportal.app:/oauth2redirect",
+        "com.studentportal.app://oauth2redirect",
         "com.studentportal.app://oauth-callback",
         "http://localhost:*"
       ],

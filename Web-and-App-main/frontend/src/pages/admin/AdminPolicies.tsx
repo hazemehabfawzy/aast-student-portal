@@ -51,8 +51,7 @@ export const AdminPolicies: React.FC = () => {
         setPrefinal(p.prefinalWeight.toString());
         setFinal(p.finalWeight.toString());
       }
-    } catch (err) {
-      console.error('Failed to load policy scales', err);
+    } catch {
     } finally {
       setLoading(false);
     }

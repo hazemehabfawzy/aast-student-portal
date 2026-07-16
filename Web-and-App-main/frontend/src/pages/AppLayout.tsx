@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { NotificationBell } from '../components/NotificationBell';
 
 export const AppLayout: React.FC = () => {
   const { role, fullName, logout, email } = useAuth();
@@ -14,6 +15,7 @@ export const AppLayout: React.FC = () => {
           { to: '/student/schedule', label: 'Weekly Schedule', icon: '📅' },
           // { to: '/student/assignments', label: 'Assignments', icon: '📝' }, // disabled until primary API has assignments
           { to: '/student/register', label: 'Register Courses', icon: '📝' },
+          { to: '/student/chat', label: 'Chat', icon: '💬' },
           { to: '/student/notifications', label: 'Notifications', icon: '🔔' },
         ];
       case 'instructor':
@@ -21,6 +23,7 @@ export const AppLayout: React.FC = () => {
           { to: '/instructor/sections', label: 'My Sections', icon: '📚' },
           { to: '/instructor/attendance', label: 'Take Attendance', icon: '⏱️' },
           { to: '/instructor/grading', label: 'Grading Portal', icon: '✍️' },
+          { to: '/instructor/chat', label: 'Chat', icon: '💬' },
           // { to: '/instructor/assignments', label: 'Assignments', icon: '📝' }, // disabled until primary API has assignments
         ];
       case 'admin':
@@ -98,6 +101,17 @@ export const AppLayout: React.FC = () => {
       </aside>
 
       <main className="main-content">
+        <header
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            marginBottom: '24px',
+            minHeight: '36px',
+          }}
+        >
+          <NotificationBell />
+        </header>
         <Outlet />
       </main>
     </div>

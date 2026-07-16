@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-06-30T18:55:03.469Z",
+  "pass": 23,
+  "warn": 0,
+  "fail": 0,
+  "total": 23,
+  "results": [
+    {
+      "status": "PASS",
+      "name": "Home page loads",
+      "detail": "HTTP 200 → http://localhost:3000/login"
+    },
+    {
+      "status": "PASS",
+      "name": "Student login",
+      "detail": "landed at http://localhost:3000/student/profile"
+    },
+    {
+      "status": "PASS",
+      "name": "Student — Dashboard",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Student — Profile",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Student — Results",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Student — Schedule",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Student — Register",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Student — Notifications",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Student — Assignments",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Student — Chat",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Instructor login",
+      "detail": "landed at http://localhost:3000/instructor/sections"
+    },
+    {
+      "status": "PASS",
+      "name": "Instructor — Sections",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Instructor — Attendance",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Instructor — Grading",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Instructor — Assignments",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Admin login",
+      "detail": "landed at http://localhost:3000/admin/students"
+    },
+    {
+      "status": "PASS",
+      "name": "Admin — Students",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Admin — Instructors",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Admin — Sections",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Admin — Courses",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Admin — Policies",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Admin — Reports",
+      "detail": ""
+    },
+    {
+      "status": "PASS",
+      "name": "Admin — Import",
+      "detail": ""
+    }
+  ],
+  "screenshots": "D:/projects/StudentPortal/web_screenshots"
+}
